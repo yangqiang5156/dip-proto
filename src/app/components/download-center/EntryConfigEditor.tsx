@@ -21,12 +21,10 @@ import { Switch } from '../ui/switch';
 import { Card } from '../ui/card';
 import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
 import { RiskLevelBadge } from './RiskLevelBadge';
-import { ApprovalChainConfigModal } from './ApprovalChainConfigModal';
 import { Separator } from '../ui/separator';
 import {
   AlertCircle,
   ChevronRight,
-  CheckCircle2,
   Settings,
   Loader2,
   AlertTriangle,
@@ -68,7 +66,7 @@ export function EntryConfigEditor({
   data,
   onSave,
 }: EntryConfigEditorProps) {
-  const [entryId, setEntryId] = useState(data?.entryId || '');
+  const entryId = data?.entryId || 'ENTRY009';
   const [entryName, setEntryName] = useState(data?.entryName || '');
   const [module, setModule] = useState(data?.module || '');
   const [page, setPage] = useState(data?.page || '');
@@ -78,42 +76,18 @@ export function EntryConfigEditor({
   const [status, setStatus] = useState<EntryStatus>(data?.status || 'disabled');
 
   const [approvalEnabled, setApprovalEnabled] = useState(true);
-  const [fileValidityDays, setFileValidityDays] = useState('7');
-  const [downloadLimit, setDownloadLimit] = useState('3');
-
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
-  const [chainConfigOpen, setChainConfigOpen] = useState(false);
 
   // Mock approval chain
   const approvalChain: ApprovalChainPreview[] = [
     { name: '直属主管', resolved: true },
     { name: '部门负责人', resolved: true },
-    { name: '安全部门', resolved: false, error: '未找到' },
+    { name: '安全部门', resolved: true },
   ];
 
   const hasApprovalError = approvalChain.some((node) => !node.resolved);
   const hasIncompleteChain = approvalChain.length < 2;
-
-  const handleSaveDraft = () => {
-    setSaving(true);
-    setTimeout(() => {
-      onSave(
-        {
-          entryId,
-          entryName,
-          module,
-          page,
-          buttonName,
-          dataType,
-          riskLevel,
-          status: 'disabled',
-        },
-        false
-      );
-      setSaving(false);
-    }, 800);
-  };
 
   const handleSaveAndEnable = () => {
     const newErrors: Record<string, string> = {};
@@ -163,15 +137,6 @@ export function EntryConfigEditor({
   const handleCancel = () => {
     setErrors({});
     onClose();
-  };
-
-  const openApprovalChainConfig = () => {
-    setChainConfigOpen(true);
-  };
-
-  const handleSaveApprovalChain = (nodes: any[]) => {
-    console.log('Saved approval chain:', nodes);
-    // In a real app, this would update the approval chain configuration
   };
 
   return (
@@ -227,22 +192,11 @@ export function EntryConfigEditor({
                 </Label>
                 <Input
                   id="entryId"
-                  placeholder="例: ENTRY001"
+                  disabled
                   value={entryId}
-                  onChange={(e) => {
-                    setEntryId(e.target.value);
-                    if (errors.entryId) {
-                      setErrors({ ...errors, entryId: '' });
-                    }
-                  }}
-                  className={errors.entryId ? 'border-destructive' : ''}
+                  className="bg-muted text-text-secondary"
                 />
-                {errors.entryId && (
-                  <p className="text-xs text-destructive flex items-center gap-1">
-                    <AlertCircle className="w-3 h-3" />
-                    {errors.entryId}
-                  </p>
-                )}
+                <p className="text-xs text-text-tertiary">由系统自动生成，不可修改</p>
               </div>
 
               <div className="space-y-2">
@@ -273,30 +227,18 @@ export function EntryConfigEditor({
                 <Label htmlFor="module" className="text-sm">
                   所属模块 <span className="text-destructive">*</span>
                 </Label>
-                <Select
+                <Input
+                  id="module"
+                  placeholder="例: 财务管理"
                   value={module}
-                  onValueChange={(value) => {
-                    setModule(value);
+                  onChange={(e) => {
+                    setModule(e.target.value);
                     if (errors.module) {
                       setErrors({ ...errors, module: '' });
                     }
                   }}
-                >
-                  <SelectTrigger
-                    id="module"
-                    className={errors.module ? 'border-destructive' : ''}
-                  >
-                    <SelectValue placeholder="请选择模块" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="data-analysis">数据分析</SelectItem>
-                    <SelectItem value="finance">财务管理</SelectItem>
-                    <SelectItem value="customer">客户管理</SelectItem>
-                    <SelectItem value="order">订单管理</SelectItem>
-                    <SelectItem value="hr">人力资源</SelectItem>
-                    <SelectItem value="system">系统管理</SelectItem>
-                  </SelectContent>
-                </Select>
+                  className={errors.module ? 'border-destructive' : ''}
+                />
                 {errors.module && (
                   <p className="text-xs text-destructive flex items-center gap-1">
                     <AlertCircle className="w-3 h-3" />
@@ -458,14 +400,7 @@ export function EntryConfigEditor({
                       <span className="text-sm font-medium text-text-secondary">
                         审批链预览
                       </span>
-                      <Button
-                        variant="link"
-                        size="sm"
-                        className="h-auto p-0 text-primary"
-                        onClick={openApprovalChainConfig}
-                      >
-                        配置
-                      </Button>
+                      <span className="text-xs text-text-tertiary">系统预制</span>
                     </div>
                     <div className="flex items-center gap-2 flex-wrap">
                       {approvalChain.map((node, index) => (
@@ -490,67 +425,8 @@ export function EntryConfigEditor({
                     </div>
                   </Card>
 
-                  <div className="flex items-start gap-2 p-3 bg-info-light/20 border border-info/20 rounded-md">
-                    <CheckCircle2 className="w-4 h-4 text-info mt-0.5 shrink-0" />
-                    <div className="space-y-1">
-                      <p className="text-sm text-info font-medium">健康状态</p>
-                      <p className="text-xs text-info/80">
-                        {hasApprovalError
-                          ? '部分审批节点解析失败'
-                          : hasIncompleteChain
-                            ? '审批链配置不完整'
-                            : '审批链配置正常'}
-                      </p>
-                    </div>
-                  </div>
                 </>
               )}
-            </div>
-          </div>
-
-          <Separator />
-
-          {/* 文件规则 Section */}
-          <div className="space-y-4">
-            <div className="flex items-center gap-2">
-              <CheckCircle2 className="h-4 w-4 text-primary" />
-              <h3 className="font-semibold text-text-primary">文件规则</h3>
-            </div>
-
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="fileValidity" className="text-sm">
-                  文件有效期（天）
-                </Label>
-                <Input
-                  id="fileValidity"
-                  type="number"
-                  min="1"
-                  max="30"
-                  value={fileValidityDays}
-                  onChange={(e) => setFileValidityDays(e.target.value)}
-                />
-                <p className="text-xs text-text-tertiary">
-                  生成的文件在此期限后自动失效
-                </p>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="downloadLimit" className="text-sm">
-                  下载次数限制
-                </Label>
-                <Input
-                  id="downloadLimit"
-                  type="number"
-                  min="1"
-                  max="100"
-                  value={downloadLimit}
-                  onChange={(e) => setDownloadLimit(e.target.value)}
-                />
-                <p className="text-xs text-text-tertiary">
-                  文件可被下载的最大次数
-                </p>
-              </div>
             </div>
           </div>
         </div>
@@ -559,10 +435,6 @@ export function EntryConfigEditor({
           <Button variant="outline" onClick={handleCancel} disabled={saving}>
             取消
           </Button>
-          <Button variant="secondary" onClick={handleSaveDraft} disabled={saving}>
-            {saving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-            保存草稿
-          </Button>
           <Button onClick={handleSaveAndEnable} disabled={saving}>
             {saving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
             保存并启用
@@ -570,34 +442,6 @@ export function EntryConfigEditor({
         </SheetFooter>
       </SheetContent>
 
-      <ApprovalChainConfigModal
-        open={chainConfigOpen}
-        onClose={() => setChainConfigOpen(false)}
-        onSave={handleSaveApprovalChain}
-        initialNodes={[
-          {
-            id: 'node-1',
-            order: 1,
-            sourceType: 'direct-manager',
-            resolverStatus: 'valid',
-          },
-          {
-            id: 'node-2',
-            order: 2,
-            sourceType: 'by-role',
-            selectedValue: '部门负责人',
-            resolverStatus: 'valid',
-          },
-          {
-            id: 'node-3',
-            order: 3,
-            sourceType: 'security-group',
-            selectedValue: '安全审批组',
-            resolverStatus: 'error',
-            resolverMessage: '未找到指定的安全组',
-          },
-        ]}
-      />
     </Sheet>
   );
 }

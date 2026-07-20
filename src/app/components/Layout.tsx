@@ -90,18 +90,6 @@ export default function Layout() {
                   >
                     导出中心
                   </NavLink>
-                  <NavLink
-                    to="/component-showcase"
-                    className={({ isActive }) =>
-                      `block px-6 py-2 text-sm ${
-                        isActive
-                          ? "text-[#4A7BF7] bg-blue-50 border-r-2 border-[#4A7BF7]"
-                          : "text-gray-600 hover:bg-gray-50 pl-6"
-                      }`
-                    }
-                  >
-                    组件展示
-                  </NavLink>
                 </div>
               )}
             </div>

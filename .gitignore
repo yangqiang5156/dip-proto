@@ -1,13 +1,16 @@
 # Dependencies
 node_modules/
+.pnpm-store/
 
 # Build output
 dist/
+.share-build/
 
 # Local environment files
 .env
 .env.*
 !.env.example
+.lark-auth-qr.png
 
 # Logs
 *.log
@@ -24,4 +27,3 @@ yarn-error.log*
 # TypeScript and test caches
 *.tsbuildinfo
 coverage/
-

@@ -18,22 +18,14 @@ import {
   TableHeader,
   TableRow,
 } from '../components/ui/table';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '../components/ui/dropdown-menu';
 import { StatusBadge, ApprovalStatus } from '../components/download-center/StatusBadge';
 import { RiskLevelBadge } from '../components/download-center/RiskLevelBadge';
 import { Alert, AlertDescription } from '../components/ui/alert';
 import {
   Eye,
-  FileText,
   RotateCw,
   Loader2,
   XCircle,
-  MoreVertical,
   ShieldAlert,
 } from 'lucide-react';
 
@@ -225,16 +217,6 @@ export default function AllRecords() {
 
   const handleViewDetail = (id: string) => {
     navigate(`/approval/${id}`);
-  };
-
-  const handleViewLog = (id: string) => {
-    console.log('View log for:', id);
-    // In production, navigate to audit log page with filter
-  };
-
-  const handleRetryGeneration = (id: string) => {
-    console.log('Retry file generation for:', id);
-    // In production, trigger file regeneration
   };
 
   const getFileStatusBadge = (fileStatus: FileStatus) => {
@@ -447,32 +429,14 @@ export default function AllRecords() {
                         {record.operator}
                       </TableCell>
                       <TableCell className="text-right">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="sm">
-                              <MoreVertical className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => handleViewDetail(record.id)}>
-                              <Eye className="h-4 w-4 mr-2" />
-                              查看详情
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleViewLog(record.id)}>
-                              <FileText className="h-4 w-4 mr-2" />
-                              查看日志
-                            </DropdownMenuItem>
-                            {record.fileStatus === '生成失败' && (
-                              <DropdownMenuItem
-                                onClick={() => handleRetryGeneration(record.id)}
-                                className="text-primary"
-                              >
-                                <RotateCw className="h-4 w-4 mr-2" />
-                                重试生成
-                              </DropdownMenuItem>
-                            )}
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleViewDetail(record.id)}
+                        >
+                          <Eye className="h-4 w-4 mr-1" />
+                          查看详情
+                        </Button>
                       </TableCell>
                     </TableRow>
                   ))}

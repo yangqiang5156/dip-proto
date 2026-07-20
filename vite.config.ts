@@ -33,4 +33,9 @@ export default defineConfig({
 
   // File types to support raw imports. Never add .css, .tsx, or .ts files to this.
   assetsInclude: ['**/*.svg', '**/*.csv'],
+  build: {
+    assetsInlineLimit:
+      process.env.VITE_STANDALONE === 'true' ? Number.MAX_SAFE_INTEGER : undefined,
+    cssCodeSplit: process.env.VITE_STANDALONE !== 'true',
+  },
 })

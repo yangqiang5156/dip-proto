@@ -30,7 +30,6 @@ interface ApplicationDetail {
   fileUrl?: string;
   downloadTime?: string;
   fileSize?: string;
-  expiryTime?: string;
   errorMessage?: string;
   exportConditions: {
     dateRange: string;
@@ -89,7 +88,6 @@ const mockApplications: Record<string, ApplicationDetail> = {
     fileStatus: "ready",
     fileUrl: "/downloads/customer_data_20260427.xlsx",
     fileSize: "2.3 MB",
-    expiryTime: "2026-05-04 16:45:10",
     exportConditions: {
       dateRange: "全部时间",
       filters: ["客户等级：VIP", "消费金额 > 10000元", "最近一年活跃"],
@@ -127,7 +125,6 @@ const mockApplications: Record<string, ApplicationDetail> = {
     purpose: "第一季度绩效评估汇总，用于年度绩效考核和薪资调整参考",
     status: "已过期",
     fileStatus: "expired",
-    expiryTime: "2026-04-25 11:10:00",
     exportConditions: {
       dateRange: "2026-01-01 至 2026-03-31",
       filters: ["员工状态：在职", "部门：全部"],
@@ -275,7 +272,7 @@ export default function ApprovalDetail() {
   };
 
   const renderFileStatusCard = () => {
-    const { fileStatus, fileUrl, fileSize, downloadTime, expiryTime, errorMessage } = application;
+    const { fileStatus, fileUrl, fileSize, downloadTime, errorMessage } = application;
 
     const statusConfig = {
       generating: {
@@ -299,7 +296,7 @@ export default function ApprovalDetail() {
       expired: {
         icon: <Clock className="h-5 w-5 text-muted-foreground" />,
         title: "文件已过期",
-        description: `过期时间：${expiryTime}`,
+        description: "文件已超过系统保留期限",
         color: "bg-muted border-border",
       },
       failed: {
@@ -323,11 +320,6 @@ export default function ApprovalDetail() {
             <div className="flex-1 min-w-0">
               <p className="font-medium text-foreground">{config.title}</p>
               <p className="text-sm text-muted-foreground mt-1">{config.description}</p>
-              {fileStatus === "ready" && expiryTime && (
-                <p className="text-xs text-muted-foreground mt-2">
-                  文件有效期至：{expiryTime}
-                </p>
-              )}
             </div>
           </div>
         </CardContent>

@@ -16,6 +16,7 @@ import {
 
 type RiskLevel = 'low' | 'medium' | 'high';
 type DecisionState = 'normal' | 'validating' | 'submitting' | 'success' | 'readonly';
+type ApprovalStatus = 'pending' | 'approved' | 'rejected';
 
 interface ApprovalRequest {
   id: string;
@@ -31,6 +32,9 @@ interface ApprovalRequest {
   remark: string;
   riskLevel: RiskLevel;
   currentNode: string;
+  approvalStatus: ApprovalStatus;
+  decisionTime?: string;
+  decisionOpinion?: string;
   exportConditions: {
     dateRange: string;
     filters: string[];
@@ -53,6 +57,7 @@ const mockRequests: Record<string, ApprovalRequest> = {
     remark: '数据仅用于内部分析，不对外公开',
     riskLevel: 'medium',
     currentNode: '功能负责人',
+    approvalStatus: 'pending',
     exportConditions: {
       dateRange: '2026-04-22 至 2026-04-29',
       filters: ['活跃用户', '登录次数 > 5', '地区：北京、上海、深圳'],
@@ -73,6 +78,7 @@ const mockRequests: Record<string, ApprovalRequest> = {
     remark: '该数据将提供给德勤会计师事务所，用于2026年Q1财务审计',
     riskLevel: 'high',
     currentNode: '功能负责人',
+    approvalStatus: 'pending',
     exportConditions: {
       dateRange: '2026-01-01 至 2026-03-31',
       filters: ['订单状态：已完成', '金额 > 1000元', '销售区域：全国'],
@@ -93,6 +99,7 @@ const mockRequests: Record<string, ApprovalRequest> = {
     remark: '计划于五一期间开展VIP客户专属活动',
     riskLevel: 'medium',
     currentNode: '功能负责人',
+    approvalStatus: 'pending',
     exportConditions: {
       dateRange: '全部时间',
       filters: ['客户等级：VIP', '消费金额 > 10000元', '最近一年活跃'],
@@ -113,10 +120,57 @@ const mockRequests: Record<string, ApprovalRequest> = {
     remark: '',
     riskLevel: 'low',
     currentNode: '功能负责人',
+    approvalStatus: 'pending',
     exportConditions: {
       dateRange: '2026-03-01 至 2026-03-31',
       filters: ['订单状态：全部', '支付方式：在线支付'],
       recordCount: '约 8,500 条',
+    },
+  },
+  '5': {
+    id: '5', requestId: 'DL202604280056', applicant: '陈华', department: '人力资源部',
+    module: '人力资源', page: '绩效管理', entryName: '员工绩效数据',
+    applyTime: '2026-04-28 11:10:00', externalUse: false,
+    purpose: '用于第一季度绩效评估汇总，为年度绩效考核提供数据依据',
+    remark: '数据仅限人力资源部内部使用', riskLevel: 'medium', currentNode: '流程结束',
+    approvalStatus: 'approved', decisionTime: '2026-04-28 11:40:22', decisionOpinion: '批准',
+    exportConditions: {
+      dateRange: '2026-01-01 至 2026-03-31', filters: ['员工状态：在职', '部门：全部'], recordCount: '约 1,200 条',
+    },
+  },
+  '6': {
+    id: '6', requestId: 'DL202604270143', applicant: '周杰', department: '技术部',
+    module: '系统管理', page: '日志中心', entryName: '系统日志导出',
+    applyTime: '2026-04-27 15:30:22', externalUse: false,
+    purpose: '排查线上服务异常，分析错误日志并定位接口超时原因',
+    remark: '排查完成后按安全规范处理数据', riskLevel: 'low', currentNode: '流程结束',
+    approvalStatus: 'approved', decisionTime: '2026-04-27 16:15:30',
+    decisionOpinion: '已确认数据用途，符合安全规范，批准',
+    exportConditions: {
+      dateRange: '2026-04-27 14:00 至 16:00', filters: ['日志级别：ERROR', '服务：订单服务'], recordCount: '约 3,600 条',
+    },
+  },
+  '7': {
+    id: '7', requestId: 'DL202604270089', applicant: '吴明', department: '市场部',
+    module: '营销管理', page: '客户运营', entryName: '客户触达记录',
+    applyTime: '2026-04-27 09:40:18', externalUse: true,
+    purpose: '分析营销活动触达效果，为下一阶段投放策略提供依据',
+    remark: '计划提供给外部营销服务商联合分析', riskLevel: 'high', currentNode: '功能负责人',
+    approvalStatus: 'rejected', decisionTime: '2026-04-27 10:25:15',
+    decisionOpinion: '导出范围过大，请缩小时间范围后重新申请',
+    exportConditions: {
+      dateRange: '2025-01-01 至 2026-04-27', filters: ['全部客户', '全部触达渠道'], recordCount: '约 920,000 条',
+    },
+  },
+  '8': {
+    id: '8', requestId: 'DL202604260123', applicant: '郑丽', department: '财务部',
+    module: '财务管理', page: '报销管理', entryName: '费用报销明细',
+    applyTime: '2026-04-26 13:55:08', externalUse: false,
+    purpose: '月度费用分析与预算执行复盘', remark: '', riskLevel: 'medium', currentNode: '流程结束',
+    approvalStatus: 'approved', decisionTime: '2026-04-26 14:50:40',
+    decisionOpinion: '数据范围合理，业务需求真实，同意导出',
+    exportConditions: {
+      dateRange: '2026-03-01 至 2026-03-31', filters: ['报销状态：已完成', '费用类型：全部'], recordCount: '约 6,800 条',
     },
   },
 };
@@ -210,6 +264,26 @@ const mockApprovalNodesMap: Record<string, ApprovalNode[]> = {
       approver: '待分配',
     },
   ],
+  '5': [
+    { id: '1', name: '直属领导', status: 'approved', approver: '王经理', opinion: '用途明确，同意申请', time: '2026-04-28 11:18:10' },
+    { id: '2', name: '功能负责人', status: 'approved', approver: '李晨（我）', opinion: '批准', time: '2026-04-28 11:40:22' },
+    { id: '3', name: '安全部门审批组', status: 'approved', approver: '安全审批组', opinion: '符合数据安全要求', time: '2026-04-28 12:05:15' },
+  ],
+  '6': [
+    { id: '1', name: '直属领导', status: 'approved', approver: '赵主管', opinion: '同意用于故障排查', time: '2026-04-27 15:38:40' },
+    { id: '2', name: '功能负责人', status: 'approved', approver: '李晨（我）', opinion: '已确认数据用途，符合安全规范，批准', time: '2026-04-27 16:15:30' },
+    { id: '3', name: '安全部门审批组', status: 'approved', approver: '安全审批组', opinion: '仅限内部排障使用', time: '2026-04-27 16:35:12' },
+  ],
+  '7': [
+    { id: '1', name: '直属领导', status: 'approved', approver: '陈经理', opinion: '业务需求属实', time: '2026-04-27 09:55:30' },
+    { id: '2', name: '功能负责人', status: 'rejected', approver: '李晨（我）', opinion: '导出范围过大，请缩小时间范围后重新申请', time: '2026-04-27 10:25:15' },
+    { id: '3', name: '安全部门审批组', status: 'pending', approver: '流程已终止' },
+  ],
+  '8': [
+    { id: '1', name: '直属领导', status: 'approved', approver: '周总监', opinion: '同意', time: '2026-04-26 14:08:20' },
+    { id: '2', name: '功能负责人', status: 'approved', approver: '李晨（我）', opinion: '数据范围合理，业务需求真实，同意导出', time: '2026-04-26 14:50:40' },
+    { id: '3', name: '安全部门审批组', status: 'approved', approver: '安全审批组', opinion: '审批通过', time: '2026-04-26 15:10:05' },
+  ],
 };
 
 export default function ApprovalDecision() {
@@ -230,7 +304,7 @@ export default function ApprovalDecision() {
     setTimeout(() => {
       setDecisionState('success');
       setTimeout(() => {
-        navigate('/pending-approval');
+        navigate('/my-approvals');
       }, 2000);
     }, 1500);
   };
@@ -246,7 +320,7 @@ export default function ApprovalDecision() {
     setTimeout(() => {
       setDecisionState('success');
       setTimeout(() => {
-        navigate('/pending-approval');
+        navigate('/my-approvals');
       }, 2000);
     }, 1500);
   };
@@ -259,7 +333,7 @@ export default function ApprovalDecision() {
     }
   };
 
-  const isReadonly = decisionState === 'readonly';
+  const isReadonly = request.approvalStatus !== 'pending' || decisionState === 'readonly';
   const isSubmitting = decisionState === 'submitting';
   const isSuccess = decisionState === 'success';
 
@@ -270,16 +344,26 @@ export default function ApprovalDecision() {
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => navigate('/pending-approval')}
+          onClick={() => navigate('/my-approvals')}
           className="mb-4 -ml-2"
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
-          返回待我审批
+          返回我的审批
         </Button>
         <div className="flex items-center gap-3 mb-2">
           <h1 className="text-2xl">审批详情</h1>
-          <span className="px-3 py-1 rounded-md bg-primary/10 text-primary text-sm font-medium">
-            {request.currentNode}
+          <span className={`px-3 py-1 rounded-md text-sm font-medium ${
+            request.approvalStatus === 'approved'
+              ? 'bg-success-light text-success'
+              : request.approvalStatus === 'rejected'
+                ? 'bg-destructive-light text-destructive'
+                : 'bg-primary/10 text-primary'
+          }`}>
+            {request.approvalStatus === 'approved'
+              ? '审批通过'
+              : request.approvalStatus === 'rejected'
+                ? '已驳回'
+                : `待审批 · ${request.currentNode}`}
           </span>
         </div>
         <p className="text-sm text-muted-foreground">申请单号：{request.requestId}</p>
@@ -412,9 +496,38 @@ export default function ApprovalDecision() {
           <div className="sticky top-6">
             <Card className="border-2">
               <CardHeader className="border-b bg-muted/30">
-                <CardTitle>审批操作</CardTitle>
+                <CardTitle>{isReadonly ? '审批结果' : '审批操作'}</CardTitle>
               </CardHeader>
               <CardContent className="pt-6">
+                {isReadonly ? (
+                  <div className="space-y-5">
+                    <div className={`rounded-lg border p-4 ${
+                      request.approvalStatus === 'approved'
+                        ? 'border-success/20 bg-success-light/40'
+                        : 'border-destructive/20 bg-destructive-light/40'
+                    }`}>
+                      <div className={`flex items-center gap-2 font-medium ${
+                        request.approvalStatus === 'approved' ? 'text-success' : 'text-destructive'
+                      }`}>
+                        {request.approvalStatus === 'approved'
+                          ? <CheckCircle2 className="h-5 w-5" />
+                          : <XCircle className="h-5 w-5" />}
+                        {request.approvalStatus === 'approved' ? '审批通过' : '已驳回'}
+                      </div>
+                    </div>
+                    <div>
+                      <p className="mb-1 text-sm text-muted-foreground">我的审批意见</p>
+                      <p className="text-sm leading-6 text-foreground">{request.decisionOpinion}</p>
+                    </div>
+                    <div>
+                      <p className="mb-1 text-sm text-muted-foreground">处理时间</p>
+                      <p className="text-sm text-foreground">{request.decisionTime}</p>
+                    </div>
+                    <p className="border-t pt-4 text-xs leading-5 text-muted-foreground">
+                      此审批已完成。左侧可查看完整申请内容和全部审批流程。
+                    </p>
+                  </div>
+                ) : (
                 <div className="space-y-4">
                   {/* Opinion Textarea */}
                   <div>
@@ -465,6 +578,7 @@ export default function ApprovalDecision() {
                     </Button>
                   </div>
                 </div>
+                )}
               </CardContent>
             </Card>
           </div>

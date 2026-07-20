@@ -11,7 +11,6 @@ import {
 } from '../components/ui/select';
 import { Card, CardContent } from '../components/ui/card';
 import { Alert, AlertDescription } from '../components/ui/alert';
-import { Badge } from '../components/ui/badge';
 import {
   Download,
   Clock,
@@ -21,7 +20,6 @@ import {
   Loader2,
   RotateCw,
   AlertCircle,
-  Info,
   HardDrive,
 } from 'lucide-react';
 
@@ -32,15 +30,12 @@ interface DownloadableFile {
   fileName: string;
   fileSize: string;
   generatedTime: string;
-  expiryTime: string;
-  remainingDownloads?: number;
   requestId: string;
   entryName: string;
   module: string;
   status: FileStatus;
   downloadUrl?: string;
   errorMessage?: string;
-  isExpiringSoon?: boolean;
 }
 
 type PageState = 'loading' | 'error' | 'empty' | 'data';
@@ -49,7 +44,6 @@ export default function DownloadableFiles() {
   const [pageState, setPageState] = useState<PageState>('data');
   const [fileStatus, setFileStatus] = useState('');
   const [entryName, setEntryName] = useState('');
-  const [expiringSoon, setExpiringSoon] = useState('');
 
   // Mock data
   const files: DownloadableFile[] = [
@@ -58,77 +52,63 @@ export default function DownloadableFiles() {
       fileName: '销售分析报表_202603.xlsx',
       fileSize: '2.3 MB',
       generatedTime: '2026-04-29 10:30:15',
-      expiryTime: '2026-05-06 10:30:15',
-      remainingDownloads: 3,
       requestId: 'DL202604290031',
       entryName: '销售数据导出',
       module: '财务管理',
       status: '待下载',
       downloadUrl: '/downloads/sales_202603.xlsx',
-      isExpiringSoon: false,
     },
     {
       id: '2',
       fileName: '日志排查明细_20260427.xlsx',
       fileSize: '856 KB',
       generatedTime: '2026-04-28 16:20:30',
-      expiryTime: '2026-04-30 16:20:30',
-      remainingDownloads: 1,
       requestId: 'DL202604280098',
       entryName: '系统日志导出',
       module: '系统管理',
       status: '待下载',
       downloadUrl: '/downloads/logs_20260427.xlsx',
-      isExpiringSoon: true,
     },
     {
       id: '3',
       fileName: '数据资产明细_华东区域.xlsx',
       fileSize: '5.7 MB',
       generatedTime: '2026-04-28 14:15:22',
-      expiryTime: '2026-05-05 14:15:22',
       requestId: 'DL202604280075',
       entryName: '客户信息表',
       module: '客户管理',
       status: '已下载',
-      isExpiringSoon: false,
     },
     {
       id: '4',
       fileName: '用户行为分析_Q1.xlsx',
       fileSize: '3.2 MB',
       generatedTime: '2026-04-27 11:40:50',
-      expiryTime: '2026-04-29 11:40:50',
       requestId: 'DL202604270089',
       entryName: '用户行为分析',
       module: '数据分析',
       status: '文件生成中',
-      isExpiringSoon: false,
     },
     {
       id: '5',
       fileName: '订单明细_202603.xlsx',
       fileSize: '1.8 MB',
       generatedTime: '2026-04-26 09:30:15',
-      expiryTime: '2026-04-28 09:30:15',
       requestId: 'DL202604260056',
       entryName: '订单明细',
       module: '订单管理',
       status: '已过期',
-      isExpiringSoon: false,
     },
     {
       id: '6',
       fileName: '财务对账单_202602.xlsx',
       fileSize: '0 KB',
       generatedTime: '2026-04-25 15:20:10',
-      expiryTime: '-',
       requestId: 'DL202604250123',
       entryName: '财务对账单导出',
       module: '财务管理',
       status: '生成失败',
       errorMessage: '数据源连接超时，请重新提交申请',
-      isExpiringSoon: false,
     },
   ];
 
@@ -142,7 +122,6 @@ export default function DownloadableFiles() {
   const handleReset = () => {
     setFileStatus('');
     setEntryName('');
-    setExpiringSoon('');
   };
 
   const handleRetry = () => {
@@ -198,9 +177,6 @@ export default function DownloadableFiles() {
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-1">
                 <h3 className="font-medium text-foreground truncate">{file.fileName}</h3>
-                {file.isExpiringSoon && (
-                  <Badge variant="destructive" className="text-xs">即将过期</Badge>
-                )}
               </div>
               <div className="flex items-center gap-4 text-sm text-muted-foreground">
                 <span className="flex items-center gap-1">
@@ -229,25 +205,11 @@ export default function DownloadableFiles() {
               <p className="text-muted-foreground mb-1">生成时间</p>
               <p className="text-foreground">{file.generatedTime}</p>
             </div>
-            <div>
-              <p className="text-muted-foreground mb-1">过期时间</p>
-              <p className={`text-foreground ${file.isExpiringSoon ? 'text-warning font-medium' : ''}`}>
-                {file.expiryTime}
-              </p>
-            </div>
           </div>
 
           {/* Status-specific content */}
           {file.status === '待下载' && (
             <>
-              {file.remainingDownloads !== undefined && (
-                <div className="mb-4 p-3 rounded-md bg-info-light/30 border border-info/20">
-                  <p className="text-sm text-info-foreground">
-                    <Info className="h-4 w-4 inline mr-1.5" />
-                    剩余下载次数: <span className="font-medium">{file.remainingDownloads}</span> 次
-                  </p>
-                </div>
-              )}
               <Button className="w-full" onClick={() => handleDownload(file)}>
                 <Download className="h-4 w-4 mr-2" />
                 下载文件
@@ -344,17 +306,6 @@ export default function DownloadableFiles() {
             <Input type="date" placeholder="选择日期" />
           </FilterItem>
 
-          <FilterItem label="即将过期">
-            <Select value={expiringSoon} onValueChange={setExpiringSoon}>
-              <SelectTrigger>
-                <SelectValue placeholder="全部文件" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">全部文件</SelectItem>
-                <SelectItem value="expiring">即将过期</SelectItem>
-              </SelectContent>
-            </Select>
-          </FilterItem>
         </FilterBar>
 
         {/* Loading State */}

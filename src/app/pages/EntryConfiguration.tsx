@@ -55,8 +55,6 @@ interface EntryConfig {
   dataType: string;
   riskLevel: RiskLevel;
   approvalEnabled: boolean;
-  fileValidityDays: number;
-  downloadLimit: number;
   status: EntryStatus;
   hasHealthIssue: boolean;
   healthIssueMessage?: string;
@@ -85,8 +83,6 @@ export default function EntryConfiguration() {
       dataType: '交易数据',
       riskLevel: 'high',
       approvalEnabled: true,
-      fileValidityDays: 7,
-      downloadLimit: 3,
       status: '启用',
       hasHealthIssue: false,
     },
@@ -99,8 +95,6 @@ export default function EntryConfiguration() {
       dataType: '用户数据',
       riskLevel: 'medium',
       approvalEnabled: true,
-      fileValidityDays: 7,
-      downloadLimit: 5,
       status: '启用',
       hasHealthIssue: true,
       healthIssueMessage: '缺少安全部门审批节点',
@@ -114,8 +108,6 @@ export default function EntryConfiguration() {
       dataType: '客户数据',
       riskLevel: 'high',
       approvalEnabled: true,
-      fileValidityDays: 3,
-      downloadLimit: 2,
       status: '启用',
       hasHealthIssue: false,
     },
@@ -128,8 +120,6 @@ export default function EntryConfiguration() {
       dataType: '订单数据',
       riskLevel: 'low',
       approvalEnabled: true,
-      fileValidityDays: 7,
-      downloadLimit: 10,
       status: '启用',
       hasHealthIssue: false,
     },
@@ -142,8 +132,6 @@ export default function EntryConfiguration() {
       dataType: 'HR数据',
       riskLevel: 'medium',
       approvalEnabled: true,
-      fileValidityDays: 5,
-      downloadLimit: 3,
       status: '停用',
       hasHealthIssue: false,
     },
@@ -156,8 +144,6 @@ export default function EntryConfiguration() {
       dataType: '系统日志',
       riskLevel: 'low',
       approvalEnabled: false,
-      fileValidityDays: 1,
-      downloadLimit: 1,
       status: '启用',
       hasHealthIssue: false,
     },
@@ -170,8 +156,6 @@ export default function EntryConfiguration() {
       dataType: '供应商数据',
       riskLevel: 'medium',
       approvalEnabled: true,
-      fileValidityDays: 7,
-      downloadLimit: 5,
       status: '启用',
       hasHealthIssue: true,
       healthIssueMessage: '审批流程未完整配置',
@@ -185,8 +169,6 @@ export default function EntryConfiguration() {
       dataType: '财务数据',
       riskLevel: 'medium',
       approvalEnabled: true,
-      fileValidityDays: 7,
-      downloadLimit: 3,
       status: '启用',
       hasHealthIssue: false,
     },
@@ -374,8 +356,6 @@ export default function EntryConfiguration() {
                     <TableHead className="font-semibold">数据类型</TableHead>
                     <TableHead className="font-semibold">风险等级</TableHead>
                     <TableHead className="font-semibold">审批启用</TableHead>
-                    <TableHead className="font-semibold">文件有效期</TableHead>
-                    <TableHead className="font-semibold">下载次数</TableHead>
                     <TableHead className="font-semibold">状态</TableHead>
                     <TableHead className="font-semibold text-right">操作</TableHead>
                   </TableRow>
@@ -416,12 +396,6 @@ export default function EntryConfiguration() {
                             未启用
                           </Badge>
                         )}
-                      </TableCell>
-                      <TableCell className="text-text-secondary">
-                        {config.fileValidityDays} 天
-                      </TableCell>
-                      <TableCell className="text-text-secondary">
-                        {config.downloadLimit} 次
                       </TableCell>
                       <TableCell>{getStatusBadge(config.status)}</TableCell>
                       <TableCell className="text-right">
