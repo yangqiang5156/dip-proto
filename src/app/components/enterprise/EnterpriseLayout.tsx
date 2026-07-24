@@ -18,19 +18,37 @@ interface MenuItem {
   path: string;
   icon: any;
   badge?: number;
+  activePrefixes?: string[];
 }
 
-const menuItems: MenuItem[] = [
-  { label: '我的申请', path: '/', icon: FileText },
-  { label: '我的审批', path: '/my-approvals', icon: ClipboardCheck, badge: 4 },
-  { label: '全部记录', path: '/all-records', icon: List },
+const downloadMenuItems: MenuItem[] = [
+  { label: '可下载文件', path: '/', icon: Download },
   { label: '入口配置', path: '/approval-config', icon: Settings },
   { label: '审计日志', path: '/audit-logs', icon: FileSearch },
+];
+
+const approvalMenuItems: MenuItem[] = [
+  {
+    label: '我的申请',
+    path: '/approval-center/my-applications',
+    icon: FileText,
+    activePrefixes: ['/approval-center/request/'],
+  },
+  {
+    label: '我的审批',
+    path: '/approval-center/my-approvals',
+    icon: ClipboardCheck,
+    badge: 5,
+    activePrefixes: ['/approval-center/approval/'],
+  },
+  { label: '全部记录', path: '/approval-center/all-records', icon: List },
 ];
 
 export function EnterpriseLayout() {
   const [demoMenuOpen, setDemoMenuOpen] = useState(false);
   const location = useLocation();
+  const isApprovalCenter = location.pathname.startsWith('/approval-center');
+  const menuItems = isApprovalCenter ? approvalMenuItems : downloadMenuItems;
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -42,21 +60,42 @@ export function EnterpriseLayout() {
               <Download className="w-4 h-4 text-white" />
             </div>
             <span className="text-base font-semibold text-white">智慧家庭数智平台</span>
+            <span className="text-white/40">/</span>
+            <span className="text-sm text-white/85">
+              {isApprovalCenter ? '审批中心' : '下载中心'}
+            </span>
           </div>
         </div>
 
         {/* Right side actions */}
-        <div className="ml-auto flex items-center gap-4">
+        <div className="ml-auto flex items-center gap-2">
+          <NavLink
+            to="/approval-center/my-applications"
+            aria-label="进入审批中心"
+            title="进入审批中心"
+            className={`flex h-8 w-8 items-center justify-center rounded-md transition-colors ${
+              isApprovalCenter
+                ? 'bg-white text-[#3069e6]'
+                : 'text-white/90 hover:bg-white/15 hover:text-white'
+            }`}
+          >
+            <ClipboardCheck className="w-5 h-5" />
+          </NavLink>
+
           <NavLink
             to="/"
             aria-label="进入下载中心"
             title="进入下载中心"
-            className="flex h-8 w-8 items-center justify-center rounded-md text-white/90 transition-colors hover:bg-white/15 hover:text-white"
+            className={`flex h-8 w-8 items-center justify-center rounded-md transition-colors ${
+              !isApprovalCenter
+                ? 'bg-white text-[#3069e6]'
+                : 'text-white/90 hover:bg-white/15 hover:text-white'
+            }`}
           >
             <Download className="w-5 h-5" />
           </NavLink>
 
-          <div className="h-6 w-px bg-white/25"></div>
+          <div className="mx-2 h-6 w-px bg-white/25"></div>
 
           <button className="flex items-center gap-2 text-sm text-white/90 hover:text-white transition-colors">
             <div className="w-7 h-7 rounded-full bg-white/15 flex items-center justify-center">
@@ -73,8 +112,10 @@ export function EnterpriseLayout() {
           <nav className="p-3 space-y-1">
             {menuItems.map((item) => {
               const Icon = item.icon;
-              const isActive = location.pathname === item.path
-                || (item.path === '/my-approvals' && location.pathname.startsWith('/approval-decision/'));
+              const isActive = Boolean(
+                location.pathname === item.path
+                || item.activePrefixes?.some((prefix) => location.pathname.startsWith(prefix)),
+              );
 
               return (
                 <NavLink
@@ -107,8 +148,7 @@ export function EnterpriseLayout() {
             })}
           </nav>
 
-          {/* Development only - component showcase links */}
-          <div className="p-3 mt-4 border-t border-sidebar-border">
+          {!isApprovalCenter && <div className="p-3 mt-4 border-t border-sidebar-border">
             <button
               type="button"
               onClick={() => setDemoMenuOpen((open) => !open)}
@@ -135,7 +175,7 @@ export function EnterpriseLayout() {
                 </NavLink>
               </div>
             )}
-          </div>
+          </div>}
         </aside>
 
         {/* Main Content Area */}

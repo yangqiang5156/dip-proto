@@ -106,7 +106,6 @@ export default function DownloadDemo() {
     pageName: '销售报表',
     buttonName: '导出数据',
     dataType: '销售订单数据',
-    riskLevel: 'high',
     exportConditions: `导出范围: 2026年4月26日 - 2026年4月29日，共 ${salesData.length} 条订单记录，包含客户名称、订单金额等敏感信息`,
   };
 

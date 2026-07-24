@@ -20,7 +20,6 @@ import {
 import { Switch } from '../ui/switch';
 import { Card } from '../ui/card';
 import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
-import { RiskLevelBadge } from './RiskLevelBadge';
 import { Separator } from '../ui/separator';
 import {
   AlertCircle,
@@ -31,7 +30,6 @@ import {
   ShieldAlert,
 } from 'lucide-react';
 
-type RiskLevel = 'low' | 'medium' | 'high';
 type EntryStatus = 'enabled' | 'disabled';
 
 interface EntryConfigData {
@@ -41,7 +39,6 @@ interface EntryConfigData {
   page: string;
   buttonName: string;
   dataType: string;
-  riskLevel: RiskLevel;
   status: EntryStatus;
 }
 
@@ -72,7 +69,6 @@ export function EntryConfigEditor({
   const [page, setPage] = useState(data?.page || '');
   const [buttonName, setButtonName] = useState(data?.buttonName || '');
   const [dataType, setDataType] = useState(data?.dataType || '');
-  const [riskLevel, setRiskLevel] = useState<RiskLevel>(data?.riskLevel || 'medium');
   const [status, setStatus] = useState<EntryStatus>(data?.status || 'disabled');
 
   const [approvalEnabled, setApprovalEnabled] = useState(true);
@@ -124,7 +120,6 @@ export function EntryConfigEditor({
             page,
             buttonName,
             dataType,
-            riskLevel,
             status: 'enabled',
           },
           true
@@ -317,37 +312,6 @@ export function EntryConfigEditor({
                     {errors.dataType}
                   </p>
                 )}
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="riskLevel" className="text-sm">
-                  风险等级 <span className="text-destructive">*</span>
-                </Label>
-                <Select
-                  value={riskLevel}
-                  onValueChange={(value) => setRiskLevel(value as RiskLevel)}
-                >
-                  <SelectTrigger id="riskLevel">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="low">
-                      <div className="flex items-center gap-2">
-                        <RiskLevelBadge level="low" size="sm" />
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="medium">
-                      <div className="flex items-center gap-2">
-                        <RiskLevelBadge level="medium" size="sm" />
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="high">
-                      <div className="flex items-center gap-2">
-                        <RiskLevelBadge level="high" size="sm" />
-                      </div>
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
               </div>
 
               <div className="space-y-2">

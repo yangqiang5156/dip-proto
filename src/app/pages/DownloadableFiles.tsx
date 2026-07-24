@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router';
 import { PageHeader, FilterBar, FilterItem, EmptyState } from '../components/enterprise';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -9,8 +10,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from '../components/ui/select';
-import { Card, CardContent } from '../components/ui/card';
 import { Alert, AlertDescription } from '../components/ui/alert';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '../components/ui/table';
 import {
   Download,
   Clock,
@@ -20,7 +28,6 @@ import {
   Loader2,
   RotateCw,
   AlertCircle,
-  HardDrive,
 } from 'lucide-react';
 
 type FileStatus = '文件生成中' | '待下载' | '已下载' | '已过期' | '生成失败';
@@ -41,87 +48,95 @@ interface DownloadableFile {
 type PageState = 'loading' | 'error' | 'empty' | 'data';
 
 export default function DownloadableFiles() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [pageState, setPageState] = useState<PageState>('data');
-  const [fileStatus, setFileStatus] = useState('');
+  const [requestId, setRequestId] = useState(searchParams.get('requestId') || '');
+  const [fileStatus, setFileStatus] = useState('all');
   const [entryName, setEntryName] = useState('');
 
   // Mock data
   const files: DownloadableFile[] = [
     {
       id: '1',
-      fileName: '销售分析报表_202603.xlsx',
-      fileSize: '2.3 MB',
-      generatedTime: '2026-04-29 10:30:15',
-      requestId: 'DL202604290031',
-      entryName: '销售数据导出',
-      module: '财务管理',
-      status: '待下载',
-      downloadUrl: '/downloads/sales_202603.xlsx',
+      fileName: '用户行为分析_Q1.xlsx',
+      fileSize: '生成中',
+      generatedTime: '2026-04-29 09:22:10',
+      requestId: 'DL20260429002',
+      entryName: '用户行为数据导出',
+      module: '用户管理',
+      status: '文件生成中',
     },
     {
       id: '2',
-      fileName: '日志排查明细_20260427.xlsx',
-      fileSize: '856 KB',
-      generatedTime: '2026-04-28 16:20:30',
-      requestId: 'DL202604280098',
-      entryName: '系统日志导出',
-      module: '系统管理',
+      fileName: '订单明细_202604.xlsx',
+      fileSize: '1.8 MB',
+      generatedTime: '2026-04-28 16:48:20',
+      requestId: 'DL20260428003',
+      entryName: '订单明细导出',
+      module: '订单中心',
       status: '待下载',
-      downloadUrl: '/downloads/logs_20260427.xlsx',
+      downloadUrl: '/downloads/order_details_202604.xlsx',
     },
     {
       id: '3',
       fileName: '数据资产明细_华东区域.xlsx',
       fileSize: '5.7 MB',
       generatedTime: '2026-04-28 14:15:22',
-      requestId: 'DL202604280075',
-      entryName: '客户信息表',
+      requestId: 'DL20260427005',
+      entryName: '客户信息导出',
       module: '客户管理',
       status: '已下载',
+      downloadUrl: '/downloads/customer_data_east.xlsx',
     },
     {
       id: '4',
-      fileName: '用户行为分析_Q1.xlsx',
-      fileSize: '3.2 MB',
-      generatedTime: '2026-04-27 11:40:50',
-      requestId: 'DL202604270089',
-      entryName: '用户行为分析',
-      module: '数据分析',
-      status: '文件生成中',
+      fileName: '物流数据导出_202604.xlsx',
+      fileSize: '0 KB',
+      generatedTime: '2026-04-25 10:02:45',
+      requestId: 'DL20260425007',
+      entryName: '物流数据导出',
+      module: '物流管理',
+      status: '生成失败',
+      errorMessage: '数据源连接超时，文件生成失败',
     },
     {
       id: '5',
-      fileName: '订单明细_202603.xlsx',
-      fileSize: '1.8 MB',
-      generatedTime: '2026-04-26 09:30:15',
-      requestId: 'DL202604260056',
-      entryName: '订单明细',
-      module: '订单管理',
-      status: '已过期',
-    },
-    {
-      id: '6',
-      fileName: '财务对账单_202602.xlsx',
-      fileSize: '0 KB',
-      generatedTime: '2026-04-25 15:20:10',
-      requestId: 'DL202604250123',
-      entryName: '财务对账单导出',
-      module: '财务管理',
-      status: '生成失败',
-      errorMessage: '数据源连接超时，请重新提交申请',
+      fileName: '日志排查明细_20260427.xlsx',
+      fileSize: '856 KB',
+      generatedTime: '2026-04-28 16:20:30',
+      requestId: 'DL20260428098',
+      entryName: '系统日志导出',
+      module: '系统管理',
+      status: '待下载',
+      downloadUrl: '/downloads/logs_20260427.xlsx',
     },
   ];
 
+  useEffect(() => {
+    setRequestId(searchParams.get('requestId') || '');
+    setPageState('data');
+  }, [searchParams]);
+
+  const filteredFiles = useMemo(() => files.filter((file) => (
+    (fileStatus === 'all' || file.status === fileStatus)
+    && file.requestId.toLowerCase().includes(requestId.trim().toLowerCase())
+    && file.entryName.toLowerCase().includes(entryName.trim().toLowerCase())
+  )), [entryName, fileStatus, requestId]);
+
   const handleSearch = () => {
     setPageState('loading');
+    setSearchParams(requestId.trim() ? { requestId: requestId.trim() } : {});
     setTimeout(() => {
       setPageState('data');
-    }, 1000);
+    }, 500);
   };
 
   const handleReset = () => {
-    setFileStatus('');
+    setRequestId('');
+    setFileStatus('all');
     setEntryName('');
+    setSearchParams({});
+    setPageState('data');
   };
 
   const handleRetry = () => {
@@ -167,95 +182,6 @@ export default function DownloadableFiles() {
     return config[status];
   };
 
-  const renderFileCard = (file: DownloadableFile) => {
-    const statusConfig = getStatusConfig(file.status);
-
-    return (
-      <Card key={file.id} className="overflow-hidden hover:shadow-md transition-shadow">
-        <CardContent className="p-6">
-          <div className="flex items-start justify-between mb-4">
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-1">
-                <h3 className="font-medium text-foreground truncate">{file.fileName}</h3>
-              </div>
-              <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                <span className="flex items-center gap-1">
-                  <HardDrive className="h-3.5 w-3.5" />
-                  {file.fileSize}
-                </span>
-                <span>申请单号: {file.requestId}</span>
-              </div>
-            </div>
-            <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-sm font-medium border ${statusConfig.className}`}>
-              {statusConfig.icon}
-              {statusConfig.label}
-            </span>
-          </div>
-
-          <div className="grid grid-cols-2 gap-x-8 gap-y-3 mb-4 text-sm">
-            <div>
-              <p className="text-muted-foreground mb-1">入口名称</p>
-              <p className="text-foreground font-medium">{file.entryName}</p>
-            </div>
-            <div>
-              <p className="text-muted-foreground mb-1">所属模块</p>
-              <p className="text-foreground">{file.module}</p>
-            </div>
-            <div>
-              <p className="text-muted-foreground mb-1">生成时间</p>
-              <p className="text-foreground">{file.generatedTime}</p>
-            </div>
-          </div>
-
-          {/* Status-specific content */}
-          {file.status === '待下载' && (
-            <>
-              <Button className="w-full" onClick={() => handleDownload(file)}>
-                <Download className="h-4 w-4 mr-2" />
-                下载文件
-              </Button>
-            </>
-          )}
-
-          {file.status === '文件生成中' && (
-            <div className="p-4 rounded-md bg-info-light/30 border border-info/20 text-center">
-              <p className="text-sm text-info-foreground">
-                系统正在生成您的导出文件，预计需要 3-5 分钟
-              </p>
-            </div>
-          )}
-
-          {file.status === '已下载' && (
-            <div className="p-4 rounded-md bg-success-light/30 border border-success/20">
-              <p className="text-sm text-success-foreground">
-                <CheckCircle2 className="h-4 w-4 inline mr-1.5" />
-                文件已下载，如需重新下载请联系管理员
-              </p>
-            </div>
-          )}
-
-          {file.status === '已过期' && (
-            <div className="p-4 rounded-md bg-muted border border-border">
-              <p className="text-sm text-muted-foreground">
-                <Clock className="h-4 w-4 inline mr-1.5" />
-                文件已过期，如需重新导出请提交新申请
-              </p>
-            </div>
-          )}
-
-          {file.status === '生成失败' && (
-            <div className="p-4 rounded-md bg-destructive-light/30 border border-destructive/20">
-              <p className="text-sm text-destructive-foreground">
-                <XCircle className="h-4 w-4 inline mr-1.5" />
-                {file.errorMessage}
-              </p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-    );
-  };
-
   return (
     <div className="h-full flex flex-col">
       <PageHeader
@@ -271,13 +197,29 @@ export default function DownloadableFiles() {
         {/* Download Logging Notice */}
         <Alert className="mb-6 border-warning/50 bg-warning-light/30">
           <AlertCircle className="h-4 w-4 text-warning" />
-          <AlertDescription className="text-warning-foreground text-sm">
+          <AlertDescription className="text-sm font-medium text-warning">
             下载行为将被记录，请确保数据使用符合公司规范
           </AlertDescription>
         </Alert>
 
+        {searchParams.get('requestId') && (
+          <Alert className="mb-6 border-primary/30 bg-primary-light/40">
+            <Download className="h-4 w-4 text-primary" />
+            <AlertDescription className="text-sm text-primary">
+              已从“我的申请”定位申请单 {searchParams.get('requestId')} 对应的交付文件
+            </AlertDescription>
+          </Alert>
+        )}
+
         {/* Filter Bar */}
         <FilterBar onSearch={handleSearch} onReset={handleReset}>
+          <FilterItem label="申请单号">
+            <Input
+              placeholder="请输入申请单号"
+              value={requestId}
+              onChange={(event) => setRequestId(event.target.value)}
+            />
+          </FilterItem>
           <FilterItem label="文件状态">
             <Select value={fileStatus} onValueChange={setFileStatus}>
               <SelectTrigger>
@@ -285,11 +227,11 @@ export default function DownloadableFiles() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">全部状态</SelectItem>
-                <SelectItem value="generating">文件生成中</SelectItem>
-                <SelectItem value="ready">待下载</SelectItem>
-                <SelectItem value="downloaded">已下载</SelectItem>
-                <SelectItem value="expired">已过期</SelectItem>
-                <SelectItem value="failed">生成失败</SelectItem>
+                <SelectItem value="文件生成中">文件生成中</SelectItem>
+                <SelectItem value="待下载">待下载</SelectItem>
+                <SelectItem value="已下载">已下载</SelectItem>
+                <SelectItem value="已过期">已过期</SelectItem>
+                <SelectItem value="生成失败">生成失败</SelectItem>
               </SelectContent>
             </Select>
           </FilterItem>
@@ -330,27 +272,87 @@ export default function DownloadableFiles() {
         )}
 
         {/* Empty State */}
-        {pageState === 'empty' && (
+        {(pageState === 'empty' || (pageState === 'data' && filteredFiles.length === 0)) && (
           <div className="bg-white rounded-lg border border-border">
             <EmptyState
               type="no-data"
               title="暂无可下载文件"
-              description="当前没有可用的导出文件"
+              description={requestId ? `未找到申请单 ${requestId} 对应的交付文件` : '当前没有符合筛选条件的导出文件'}
             />
           </div>
         )}
 
-        {/* File List */}
-        {pageState === 'data' && (
+        {/* File Table */}
+        {pageState === 'data' && filteredFiles.length > 0 && (
           <>
-            <div className="grid grid-cols-1 gap-4">
-              {files.map((file) => renderFileCard(file))}
+            <div className="overflow-x-auto rounded-lg border bg-white">
+              <Table className="min-w-[900px]">
+                <TableHeader>
+                  <TableRow className="bg-muted/50">
+                    <TableHead className="font-semibold">文件名称</TableHead>
+                    <TableHead className="font-semibold">申请单号</TableHead>
+                    <TableHead className="font-semibold">入口名称</TableHead>
+                    <TableHead className="font-semibold">所属模块</TableHead>
+                    <TableHead className="font-semibold">文件大小</TableHead>
+                    <TableHead className="font-semibold">生成时间</TableHead>
+                    <TableHead className="font-semibold">文件状态</TableHead>
+                    <TableHead className="text-right font-semibold">操作</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredFiles.map((file) => {
+                    const statusConfig = getStatusConfig(file.status);
+                    return (
+                      <TableRow key={file.id} className="hover:bg-muted/30">
+                        <TableCell className="font-medium">{file.fileName}</TableCell>
+                        <TableCell className="font-mono text-xs font-medium text-primary">{file.requestId}</TableCell>
+                        <TableCell>{file.entryName}</TableCell>
+                        <TableCell className="text-text-secondary">{file.module}</TableCell>
+                        <TableCell className="text-text-secondary">{file.fileSize}</TableCell>
+                        <TableCell className="whitespace-nowrap text-sm text-text-secondary">{file.generatedTime}</TableCell>
+                        <TableCell>
+                          <div className="space-y-1.5">
+                            <span className={`inline-flex items-center gap-1.5 rounded-md border px-2 py-0.5 text-xs font-medium ${statusConfig.className}`}>
+                              {statusConfig.icon}
+                              {statusConfig.label}
+                            </span>
+                            {file.status === '文件生成中' && (
+                              <p className="text-xs text-info">预计需要 3-5 分钟</p>
+                            )}
+                            {file.status === '生成失败' && (
+                              <p className="max-w-48 text-xs text-destructive">{file.errorMessage}</p>
+                            )}
+                            {file.status === '已下载' && (
+                              <p className="max-w-48 text-xs text-success">7 天有效期内可重复下载</p>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          {file.status === '待下载' && (
+                            <Button variant="ghost" size="sm" className="text-primary hover:bg-primary/10 hover:text-primary" onClick={() => handleDownload(file)}>
+                              <Download className="mr-1 h-4 w-4" />下载
+                            </Button>
+                          )}
+                          {file.status === '已下载' && (
+                            <Button variant="ghost" size="sm" className="text-success hover:bg-success/10 hover:text-success" onClick={() => handleDownload(file)}>
+                              <Download className="mr-1 h-4 w-4" />再次下载
+                            </Button>
+                          )}
+                          {file.status === '文件生成中' && <span className="text-xs text-text-tertiary">生成完成后可下载</span>}
+                          {file.status === '生成失败' && <span className="text-xs text-destructive">暂不可下载</span>}
+                          {file.status === '已过期' && <span className="text-xs text-text-tertiary">已过期</span>}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
             </div>
 
             {/* Pagination */}
             <div className="mt-6 flex items-center justify-between">
               <span className="text-sm text-text-secondary">
-                共 {files.length} 个文件
+                共 {filteredFiles.length} 个文件
               </span>
               <div className="flex items-center gap-2">
                 <Button variant="outline" size="sm" disabled>

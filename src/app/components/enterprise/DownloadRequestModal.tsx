@@ -19,7 +19,6 @@ import {
   SelectValue,
 } from '../ui/select';
 import { Card } from '../ui/card';
-import { RiskLevelBadge } from '../download-center';
 import { SystemBanner } from '../download-center/SystemBanner';
 import { AlertCircle, ChevronRight, Loader2 } from 'lucide-react';
 
@@ -30,7 +29,6 @@ export interface DownloadContext {
   pageName: string;
   buttonName: string;
   dataType: string;
-  riskLevel: 'low' | 'medium' | 'high';
   exportConditions: string;
 }
 
@@ -155,12 +153,6 @@ export function DownloadRequestModal({
               <div>
                 <span className="text-text-secondary">数据类型:</span>
                 <p className="text-text-primary mt-0.5">{context.dataType}</p>
-              </div>
-              <div className="col-span-2">
-                <span className="text-text-secondary">风险等级:</span>
-                <div className="mt-1">
-                  <RiskLevelBadge level={context.riskLevel} size="sm" />
-                </div>
               </div>
             </div>
           </Card>

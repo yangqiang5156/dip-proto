@@ -1,496 +1,274 @@
-import { useParams, useNavigate } from "react-router";
-import { Download, AlertCircle, CheckCircle2, Clock, XCircle, FileX, Loader2, Copy, ArrowLeft } from "lucide-react";
-import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
-import { Button } from "../components/ui/button";
-import { StatusBadge, ApprovalStatus } from "../components/download-center/StatusBadge";
-import { ApprovalProgress, ApprovalNode } from "../components/download-center/ApprovalProgress";
-import { Alert, AlertDescription } from "../components/ui/alert";
+import { useNavigate, useParams } from 'react-router';
+import { AlertCircle, ArrowLeft, CheckCircle2, Clock, Copy, Download, FileX, Loader2 } from 'lucide-react';
+import { Alert, AlertDescription } from '../components/ui/alert';
+import { Button } from '../components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
+import { ApprovalNode } from '../components/download-center/ApprovalProgress';
+import { ApprovalStatus, StatusBadge } from '../components/download-center/StatusBadge';
+import { ApprovalProcessTable, RequestType, RequestTypeBadge, TablePermissionDetail } from '../components/approval-center';
 
-type FileStatus =
-  | "generating"
-  | "ready"
-  | "downloaded"
-  | "expired"
-  | "failed";
+type FileStatus = 'generating' | 'ready' | 'downloaded' | 'expired' | 'failed';
+
+interface TablePermission {
+  systemName: string;
+  databaseName: string;
+  tableNames: string[];
+  permissions: string[];
+  dataScope: string;
+  validity: string;
+  effectiveTime?: string;
+}
 
 interface ApplicationDetail {
   id: string;
-  entryName: string;
+  requestType: RequestType;
+  requestName: string;
   module: string;
-  page: string;
+  page?: string;
   applicant: string;
   department: string;
   applyTime: string;
-  externalUse: boolean;
   purpose: string;
   remark?: string;
+  externalUse?: boolean;
   status: ApprovalStatus;
-  fileStatus: FileStatus;
+  errorMessage?: string;
+  fileStatus?: FileStatus;
   fileUrl?: string;
   downloadTime?: string;
   fileSize?: string;
-  errorMessage?: string;
-  exportConditions: {
-    dateRange: string;
-    filters: string[];
-  };
+  exportConditions?: { dateRange: string; filters: string[] };
+  tablePermission?: TablePermission;
 }
 
-const mockApplications: Record<string, ApplicationDetail> = {
-  "1": {
-    id: "DL202604280031",
-    entryName: "用户行为分析",
-    module: "数据分析",
-    page: "用户画像",
-    applicant: "李明",
-    department: "产品部",
-    applyTime: "2026-04-28 14:30:22",
-    externalUse: false,
-    purpose: "用于本周产品周报分析，需要导出最近一周的用户活跃数据，分析用户留存率和活跃度趋势",
-    remark: "请尽快审批，本周五需要提交报告",
-    status: "审批中",
-    fileStatus: "generating",
-    exportConditions: {
-      dateRange: "2026-04-21 至 2026-04-28",
-      filters: ["活跃用户", "登录次数 > 5", "地区：北京、上海、深圳"],
-    },
+const downloadApplications: Record<string, ApplicationDetail> = {
+  '1': {
+    id: 'DL20260429001', requestType: '数据下载', requestName: '销售分析报表导出', module: '数据分析', page: '销售分析',
+    applicant: '李明', department: '产品部', applyTime: '2026-04-29 10:30:15', externalUse: false,
+    purpose: '用于本周经营分析，统计销售趋势和重点产品表现。',
+    remark: '数据仅限内部经营分析使用', status: '审批中',
+    exportConditions: { dateRange: '2026-04-01 至 2026-04-29', filters: ['订单状态：已完成', '销售区域：全国'] },
   },
-  "2": {
-    id: "DL202604280028",
-    entryName: "销售数据导出",
-    module: "财务管理",
-    page: "销售报表",
-    applicant: "王芳",
-    department: "财务部",
-    applyTime: "2026-04-28 10:15:30",
-    externalUse: true,
-    purpose: "季度财务汇报使用，需提供给外部审计机构进行财务审计",
-    status: "已驳回",
-    fileStatus: "failed",
-    errorMessage: "审批被拒绝，原因：缺少部门负责人签字，请补充完整审批材料后重新提交",
-    exportConditions: {
-      dateRange: "2026-01-01 至 2026-03-31",
-      filters: ["订单状态：已完成", "金额 > 1000元", "销售区域：全国"],
-    },
+  '2': {
+    id: 'DL20260429002', requestType: '数据下载', requestName: '用户行为数据导出', module: '用户管理', page: '用户画像',
+    applicant: '李明', department: '产品部', applyTime: '2026-04-29 09:15:22', externalUse: false,
+    purpose: '用于产品使用行为分析和用户留存研究。', status: '审批通过', fileStatus: 'generating',
+    exportConditions: { dateRange: '2026-04-01 至 2026-04-29', filters: ['活跃用户', '登录次数 > 5'] },
   },
-  "3": {
-    id: "DL202604270156",
-    entryName: "客户信息表",
-    module: "客户管理",
-    page: "客户列表",
-    applicant: "张敏",
-    department: "市场部",
-    applyTime: "2026-04-27 16:45:10",
-    externalUse: false,
-    purpose: "市场活动策划需要，导出VIP客户信息用于定向营销活动推送",
-    status: "待下载",
-    fileStatus: "ready",
-    fileUrl: "/downloads/customer_data_20260427.xlsx",
-    fileSize: "2.3 MB",
-    exportConditions: {
-      dateRange: "全部时间",
-      filters: ["客户等级：VIP", "消费金额 > 10000元", "最近一年活跃"],
-    },
+  '3': {
+    id: 'DL20260428003', requestType: '数据下载', requestName: '订单明细导出', module: '订单中心', page: '订单明细',
+    applicant: '李明', department: '产品部', applyTime: '2026-04-28 16:45:30', externalUse: false,
+    purpose: '用于订单履约情况和产品销售趋势分析。', status: '审批通过', fileStatus: 'ready',
+    fileUrl: '/downloads/order_details_202604.xlsx', fileSize: '1.8 MB',
+    exportConditions: { dateRange: '2026-04-01 至 2026-04-28', filters: ['订单状态：全部', '支付方式：在线支付'] },
   },
-  "4": {
-    id: "DL202604260089",
-    entryName: "订单明细",
-    module: "订单管理",
-    page: "订单中心",
-    applicant: "刘强",
-    department: "运营部",
-    applyTime: "2026-04-26 09:20:45",
-    externalUse: false,
-    purpose: "运营月报数据分析，统计3月份订单情况和销售趋势",
-    status: "已下载",
-    fileStatus: "downloaded",
-    fileUrl: "/downloads/order_details_20260426.xlsx",
-    downloadTime: "2026-04-26 18:30:12",
-    fileSize: "5.7 MB",
-    exportConditions: {
-      dateRange: "2026-03-01 至 2026-03-31",
-      filters: ["订单状态：全部", "支付方式：在线支付"],
-    },
+  '4': {
+    id: 'DL202604260089', requestType: '数据下载', requestName: '订单明细', module: '订单管理', page: '订单中心',
+    applicant: '刘强', department: '运营部', applyTime: '2026-04-26 09:20:45', externalUse: false,
+    purpose: '运营月报数据分析，统计三月份订单情况和销售趋势。', status: '审批通过', fileStatus: 'downloaded',
+    fileUrl: '/downloads/order_details_20260426.xlsx', downloadTime: '2026-04-26 18:30:12', fileSize: '5.7 MB',
+    exportConditions: { dateRange: '2026-03-01 至 2026-03-31', filters: ['订单状态：全部', '支付方式：在线支付'] },
   },
-  "5": {
-    id: "DL202604180012",
-    entryName: "员工绩效数据",
-    module: "人力资源",
-    page: "绩效管理",
-    applicant: "陈华",
-    department: "人力资源部",
-    applyTime: "2026-04-18 11:10:00",
-    externalUse: false,
-    purpose: "第一季度绩效评估汇总，用于年度绩效考核和薪资调整参考",
-    status: "已过期",
-    fileStatus: "expired",
-    exportConditions: {
-      dateRange: "2026-01-01 至 2026-03-31",
-      filters: ["员工状态：在职", "部门：全部"],
-    },
+  '6': {
+    id: 'DL202604240123', requestType: '数据下载', requestName: '系统日志导出', module: '系统管理', page: '日志中心',
+    applicant: '周杰', department: '技术部', applyTime: '2026-04-24 15:20:00', purpose: '用于线上故障定位。',
+    status: '审批通过', fileStatus: 'failed', errorMessage: '数据源连接超时，文件生成失败。',
+    exportConditions: { dateRange: '2026-04-24', filters: ['日志级别：ERROR'] },
+  },
+  '5': {
+    id: 'DL20260427005', requestType: '数据下载', requestName: '客户信息导出', module: '客户管理', page: '客户列表',
+    applicant: '李明', department: '产品部', applyTime: '2026-04-27 11:35:42', purpose: '用于客户结构分析和服务质量复盘。',
+    status: '审批通过', fileStatus: 'downloaded', fileUrl: '/downloads/customer_data_east.xlsx',
+    downloadTime: '2026-04-28 14:15:22', fileSize: '5.7 MB',
+    exportConditions: { dateRange: '全部时间', filters: ['所属区域：华东', '敏感字段：脱敏'] },
+  },
+  '7': {
+    id: 'DL20260425007', requestType: '数据下载', requestName: '物流数据导出', module: '物流管理', page: '物流报表',
+    applicant: '李明', department: '产品部', applyTime: '2026-04-25 09:50:33', purpose: '用于物流时效和异常订单分析。',
+    status: '审批通过', fileStatus: 'failed', errorMessage: '数据源连接超时，文件生成失败。',
+    exportConditions: { dateRange: '2026-04-01 至 2026-04-25', filters: ['配送状态：全部'] },
+  },
+  '8': {
+    id: 'DL202604220134', requestType: '数据下载', requestName: '费用报销明细', module: '财务管理', page: '报销管理',
+    applicant: '郑丽', department: '财务部', applyTime: '2026-04-22 14:10:00', purpose: '月度费用分析与预算执行复盘。',
+    status: '审批通过', fileStatus: 'generating', exportConditions: { dateRange: '2026-03-01 至 2026-03-31', filters: ['报销状态：已完成'] },
   },
 };
 
-const mockApprovalNodes: Record<string, ApprovalNode[]> = {
-  "1": [
-    {
-      id: "1",
-      name: "直属领导",
-      status: "approved",
-      approver: "张敏",
-      opinion: "同意",
-      time: "2026-04-28 14:35:10",
-    },
-    {
-      id: "2",
-      name: "功能负责人",
-      status: "current",
-      approver: "李晨",
-    },
-    {
-      id: "3",
-      name: "安全部门审批组",
-      status: "pending",
-      approver: "待分配",
-    },
-  ],
-  "2": [
-    {
-      id: "1",
-      name: "直属领导",
-      status: "approved",
-      approver: "赵雪",
-      opinion: "数据用途合理，同意申请",
-      time: "2026-04-28 10:20:15",
-    },
-    {
-      id: "2",
-      name: "功能负责人",
-      status: "rejected",
-      approver: "周强",
-      opinion: "缺少部门负责人签字，请补充完整审批材料后重新提交",
-      time: "2026-04-28 11:05:40",
-    },
-  ],
-  "3": [
-    {
-      id: "1",
-      name: "直属领导",
-      status: "approved",
-      approver: "孙丽",
-      opinion: "业务需求明确，同意",
-      time: "2026-04-27 16:50:22",
-    },
-    {
-      id: "2",
-      name: "功能负责人",
-      status: "approved",
-      approver: "吴刚",
-      opinion: "已确认数据范围，批准",
-      time: "2026-04-27 17:15:08",
-    },
-    {
-      id: "3",
-      name: "安全部门审批组",
-      status: "approved",
-      approver: "郑涛",
-      opinion: "已通过安全审查",
-      time: "2026-04-27 17:45:33",
-    },
-  ],
-  "4": [
-    {
-      id: "1",
-      name: "直属领导",
-      status: "approved",
-      approver: "林芳",
-      opinion: "同意导出",
-      time: "2026-04-26 09:30:18",
-    },
-    {
-      id: "2",
-      name: "功能负责人",
-      status: "approved",
-      approver: "黄磊",
-      opinion: "审核通过",
-      time: "2026-04-26 10:12:45",
-    },
-    {
-      id: "3",
-      name: "安全部门审批组",
-      status: "approved",
-      approver: "杨静",
-      opinion: "无安全风险",
-      time: "2026-04-26 10:50:20",
-    },
-  ],
-  "5": [
-    {
-      id: "1",
-      name: "直属领导",
-      status: "approved",
-      approver: "钱伟",
-      opinion: "同意",
-      time: "2026-04-18 11:15:30",
-    },
-    {
-      id: "2",
-      name: "功能负责人",
-      status: "approved",
-      approver: "孙美",
-      opinion: "批准",
-      time: "2026-04-18 11:40:22",
-    },
-    {
-      id: "3",
-      name: "安全部门审批组",
-      status: "approved",
-      approver: "周杰",
-      opinion: "通过",
-      time: "2026-04-18 12:05:15",
-    },
-  ],
+const tableApplications: Record<string, ApplicationDetail> = {
+  'table-request-1': {
+    id: 'TB20260710001', requestType: '数据表权限', requestName: '物理表：PROD-t05_ai_nlp_wakeup_log（语音唤醒日志）权限审批申请',
+    module: '权限管理', applicant: '杨强', department: '智慧家庭平台', applyTime: '2026-07-10 14:22:17',
+    purpose: '测试审批流程', status: '审批中',
+    tablePermission: { systemName: '权限管理', databaseName: 'hdw_dwb', tableNames: ['t05_ai_nlp_wakeup_log'], permissions: ['查询'], dataScope: '字段级权限（7 个字段）', validity: '长期' },
+  },
+  'table-request-2': {
+    id: 'TB202604280156', requestType: '数据表权限', requestName: 'customer_profile 客户画像表',
+    module: '客户数据平台', applicant: '张敏', department: '市场部', applyTime: '2026-04-28 16:45:10',
+    purpose: '用于营销人群圈选和活动效果分析。', status: '审批通过',
+    tablePermission: { systemName: '客户数据平台', databaseName: 'customer_ads', tableNames: ['customer_profile', 'customer_tag'], permissions: ['查询', '导出'], dataScope: '仅限本人负责业务区域', validity: '180 天', effectiveTime: '2026-04-28 18:05:00' },
+  },
+  'table-request-3': {
+    id: 'TB202604270089', requestType: '数据表权限', requestName: 'dwd_customer_contact 客户触达明细',
+    module: '营销数据集市', applicant: '吴明', department: '市场部', applyTime: '2026-04-27 09:40:18',
+    purpose: '用于分析营销活动触达效果。', status: '已驳回', errorMessage: '申请的数据范围过大，请限定负责区域并缩短权限有效期。',
+    tablePermission: { systemName: '营销数据集市', databaseName: 'marketing_dw', tableNames: ['dwd_customer_contact'], permissions: ['查询', '导出'], dataScope: '全国全部客户', validity: '长期' },
+  },
+  'table-approval-1': {
+    id: 'TB202604290030', requestType: '数据表权限', requestName: 'ads_finance_summary 财务汇总表',
+    module: '数据仓库', applicant: '王芳', department: '财务部', applyTime: '2026-04-29 13:20:16',
+    purpose: '用于季度经营分析及财务数据核对。', status: '审批中',
+    tablePermission: { systemName: '数据仓库', databaseName: 'finance_ads', tableNames: ['ads_finance_summary'], permissions: ['查询'], dataScope: '仅限财务部数据', validity: '90 天' },
+  },
+  'table-approval-2': {
+    id: 'TB202604230078', requestType: '数据表权限', requestName: 'ads_campaign_result 活动效果表',
+    module: '营销数据集市', applicant: '吴明', department: '市场部', applyTime: '2026-04-23 09:25:15',
+    purpose: '用于活动投放效果复盘。', status: '审批通过',
+    tablePermission: { systemName: '营销数据集市', databaseName: 'marketing_ads', tableNames: ['ads_campaign_result'], permissions: ['查询'], dataScope: '本人负责活动', validity: '30 天', effectiveTime: '2026-04-23 10:25:15' },
+  },
+  'table-approval-3': {
+    id: 'TB202604250147', requestType: '数据表权限', requestName: 'dwd_employee_performance 员工绩效表',
+    module: '人力数据集市', applicant: '陈华', department: '人力资源部', applyTime: '2026-04-25 10:05:15',
+    purpose: '用于季度绩效汇总。', status: '已驳回', errorMessage: '涉及高敏感人力数据，当前用途和授权范围说明不足。',
+    tablePermission: { systemName: '人力数据集市', databaseName: 'hr_dw', tableNames: ['dwd_employee_performance'], permissions: ['查询', '导出'], dataScope: '全部员工', validity: '180 天' },
+  },
 };
+
+const mockApplications = { ...downloadApplications, ...tableApplications };
+
+const defaultNodes: ApprovalNode[] = [
+  { id: '1', name: '直属主管', status: 'approved', approver: '张敏', opinion: '业务用途明确，同意申请', time: '2026-04-29 11:30:10' },
+  { id: '2', name: '资源负责人', status: 'current', approver: '李晨' },
+  { id: '3', name: '安全审计', status: 'pending', approver: '待分配' },
+];
+
+function getApprovalNodes(application: ApplicationDetail): ApprovalNode[] {
+  if (application.status === '审批通过') {
+    return [
+      { id: '1', name: '直属主管', status: 'approved', approver: '张敏', opinion: '同意', time: '2026-04-28 17:00:10' },
+      { id: '2', name: application.requestType === '数据表权限' ? '数据 Owner' : '功能负责人', status: 'approved', approver: '李晨', opinion: '授权范围合理，审批通过', time: '2026-04-28 17:35:20' },
+      { id: '3', name: '安全审计', status: 'approved', approver: '安全审批组', opinion: '符合数据安全要求', time: '2026-04-28 18:05:00' },
+    ];
+  }
+  if (application.status === '已驳回') {
+    return [
+      { id: '1', name: '直属主管', status: 'approved', approver: '张敏', opinion: '业务需求属实', time: '2026-04-27 10:00:00' },
+      { id: '2', name: application.requestType === '数据表权限' ? '数据 Owner' : '功能负责人', status: 'rejected', approver: '李晨', opinion: application.errorMessage, time: '2026-04-27 10:25:15' },
+      { id: '3', name: '安全审计', status: 'pending', approver: '流程已终止' },
+    ];
+  }
+  return defaultNodes.map((node) => ({ ...node, name: node.id === '2' && application.requestType === '数据表权限' ? '数据 Owner' : node.name }));
+}
 
 export default function ApprovalDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const application = mockApplications[id || "1"] || mockApplications["1"];
-  const approvalNodes = mockApprovalNodes[id || "1"] || mockApprovalNodes["1"];
+  const application = mockApplications[id || '1'] || mockApplications['1'];
+  const approvalNodes = getApprovalNodes(application);
 
-  const handleDownload = () => {
-    console.log("下载文件:", application.fileUrl);
-  };
-
-  const handleWithdraw = () => {
-    console.log("撤回申请");
-  };
-
-  const handleCopyAndResubmit = () => {
-    navigate("/new-application");
-  };
-
-  const renderFileStatusCard = () => {
-    const { fileStatus, fileUrl, fileSize, downloadTime, errorMessage } = application;
-
-    const statusConfig = {
-      generating: {
-        icon: <Loader2 className="h-5 w-5 text-info animate-spin" />,
-        title: "文件生成中",
-        description: "系统正在生成您的导出文件，预计需要 3-5 分钟，请稍候...",
-        color: "bg-info-light border-info/20",
-      },
-      ready: {
-        icon: <Download className="h-5 w-5 text-primary" />,
-        title: "文件已就绪",
-        description: `文件大小：${fileSize}`,
-        color: "bg-primary-light border-primary/20",
-      },
-      downloaded: {
-        icon: <CheckCircle2 className="h-5 w-5 text-success" />,
-        title: "已下载",
-        description: `下载时间：${downloadTime}`,
-        color: "bg-success-light border-success/20",
-      },
-      expired: {
-        icon: <Clock className="h-5 w-5 text-muted-foreground" />,
-        title: "文件已过期",
-        description: "文件已超过系统保留期限",
-        color: "bg-muted border-border",
-      },
-      failed: {
-        icon: <FileX className="h-5 w-5 text-destructive" />,
-        title: "生成失败",
-        description: errorMessage || "文件生成失败，请重新提交申请",
-        color: "bg-destructive-light border-destructive/20",
-      },
-    };
-
-    const config = statusConfig[fileStatus];
-
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>文件状态</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className={`flex items-start gap-3 p-4 rounded-lg border ${config.color}`}>
-            <div className="flex-shrink-0 mt-0.5">{config.icon}</div>
-            <div className="flex-1 min-w-0">
-              <p className="font-medium text-foreground">{config.title}</p>
-              <p className="text-sm text-muted-foreground mt-1">{config.description}</p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  };
-
-  const renderActions = () => {
-    const { status, fileStatus } = application;
-
-    return (
-      <div className="space-y-3">
-        {status === "审批中" && (
-          <Button variant="outline" className="w-full" onClick={handleWithdraw}>
-            撤回申请
-          </Button>
-        )}
-
-        {status === "已驳回" && (
-          <Button variant="outline" className="w-full" onClick={handleCopyAndResubmit}>
-            <Copy className="h-4 w-4 mr-2" />
-            复制并重新发起
-          </Button>
-        )}
-
-        {fileStatus === "ready" && (
-          <Button className="w-full" onClick={handleDownload}>
-            <Download className="h-4 w-4 mr-2" />
-            去下载文件
-          </Button>
-        )}
-      </div>
-    );
-  };
+  const fileConfig = application.fileStatus ? {
+    generating: { icon: <Loader2 className="h-5 w-5 animate-spin text-info" />, title: '文件生成中', description: '系统正在生成导出文件，预计需要 3-5 分钟。', color: 'bg-info-light border-info/20' },
+    ready: { icon: <Download className="h-5 w-5 text-primary" />, title: '文件已就绪', description: `文件大小：${application.fileSize}`, color: 'bg-primary-light border-primary/20' },
+    downloaded: { icon: <CheckCircle2 className="h-5 w-5 text-success" />, title: '文件可下载', description: `最近下载：${application.downloadTime}，7 天有效期内不限下载次数`, color: 'bg-success-light border-success/20' },
+    expired: { icon: <Clock className="h-5 w-5 text-muted-foreground" />, title: '文件已过期', description: '文件已超过 7 天保留期限。', color: 'bg-muted border-border' },
+    failed: { icon: <FileX className="h-5 w-5 text-destructive" />, title: '生成失败', description: application.errorMessage || '文件生成失败。', color: 'bg-destructive-light border-destructive/20' },
+  }[application.fileStatus] : null;
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
+    <div className="mx-auto max-w-7xl p-6">
+      <Button variant="ghost" size="sm" className="mb-4 -ml-2" onClick={() => navigate('/approval-center/my-applications')}>
+        <ArrowLeft className="mr-2 h-4 w-4" />返回我的申请
+      </Button>
       <div className="mb-6">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => navigate('/')}
-          className="mb-4 -ml-2"
-        >
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          返回我的申请
-        </Button>
-        <div className="flex items-center gap-3 mb-2">
-          <h1 className="text-2xl">申请详情</h1>
+        <div className="mb-2 flex items-center gap-3">
+          <h1 className="text-2xl">
+            {application.requestType === '数据表权限' ? application.requestName : '申请详情'}
+          </h1>
+          <RequestTypeBadge type={application.requestType} />
           <StatusBadge status={application.status} />
         </div>
         <p className="text-sm text-muted-foreground">申请单号：{application.id}</p>
       </div>
 
-      {application.status === "已驳回" && (
+      {application.status === '已驳回' && (
         <Alert className="mb-6 border-destructive/50 bg-destructive-light">
           <AlertCircle className="h-4 w-4 text-destructive" />
-          <AlertDescription className="text-destructive">
-            {application.errorMessage}
-          </AlertDescription>
+          <AlertDescription className="text-destructive">{application.errorMessage}</AlertDescription>
         </Alert>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>基本信息</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 gap-x-8 gap-y-4">
-                <div>
-                  <p className="text-sm text-muted-foreground mb-1">申请单号</p>
-                  <p className="text-sm text-foreground">{application.id}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground mb-1">入口名称</p>
-                  <p className="text-sm text-foreground">{application.entryName}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground mb-1">模块</p>
-                  <p className="text-sm text-foreground">{application.module}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground mb-1">页面</p>
-                  <p className="text-sm text-foreground">{application.page}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground mb-1">申请人</p>
-                  <p className="text-sm text-foreground">{application.applicant}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground mb-1">部门</p>
-                  <p className="text-sm text-foreground">{application.department}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground mb-1">申请时间</p>
-                  <p className="text-sm text-foreground">{application.applyTime}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground mb-1">是否对外使用</p>
-                  <p className="text-sm text-foreground">
-                    {application.externalUse ? "是" : "否"}
-                  </p>
-                </div>
-                <div className="col-span-2">
-                  <p className="text-sm text-muted-foreground mb-1">下载用途</p>
-                  <p className="text-sm text-foreground leading-relaxed">
-                    {application.purpose}
-                  </p>
-                </div>
-                {application.remark && (
-                  <div className="col-span-2">
-                    <p className="text-sm text-muted-foreground mb-1">备注</p>
-                    <p className="text-sm text-foreground leading-relaxed">
-                      {application.remark}
-                    </p>
-                  </div>
-                )}
-              </div>
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+        <div className="space-y-6 lg:col-span-2">
+          {application.requestType === '数据下载' && <Card>
+            <CardHeader><CardTitle>申请信息</CardTitle></CardHeader>
+            <CardContent className="grid grid-cols-2 gap-x-8 gap-y-4 text-sm">
+              <Info label="申请名称" value={application.requestName} />
+              <Info label="所属系统/模块" value={application.module} />
+              {application.page && <Info label="来源页面" value={application.page} />}
+              <Info label="申请人" value={application.applicant} />
+              <Info label="所属部门" value={application.department} />
+              <Info label="申请时间" value={application.applyTime} />
+              {application.externalUse !== undefined && <Info label="是否对外使用" value={application.externalUse ? '是' : '否'} />}
+              <div className="col-span-2"><Info label="申请用途" value={application.purpose} /></div>
+              {application.remark && <div className="col-span-2"><Info label="补充说明" value={application.remark} /></div>}
             </CardContent>
-          </Card>
+          </Card>}
 
-          <Card>
-            <CardHeader>
-              <CardTitle>导出条件摘要</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                <div>
-                  <p className="text-sm text-muted-foreground mb-1">时间范围</p>
-                  <p className="text-sm text-foreground">{application.exportConditions.dateRange}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground mb-1">筛选条件</p>
-                  <div className="flex flex-wrap gap-2 mt-2">
-                    {application.exportConditions.filters.map((filter, index) => (
-                      <span
-                        key={index}
-                        className="inline-flex items-center px-2.5 py-1 rounded-md bg-secondary text-secondary-foreground text-xs"
-                      >
-                        {filter}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          {application.exportConditions && (
+            <Card>
+              <CardHeader><CardTitle>下载内容</CardTitle></CardHeader>
+              <CardContent className="space-y-4">
+                <Info label="时间范围" value={application.exportConditions.dateRange} />
+                <TagList label="筛选条件" values={application.exportConditions.filters} />
+              </CardContent>
+            </Card>
+          )}
 
-          <Card>
-            <CardHeader>
-              <CardTitle>审批流程</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ApprovalProgress nodes={approvalNodes} />
-            </CardContent>
-          </Card>
+          {application.tablePermission && (
+            <TablePermissionDetail
+              permission={application.tablePermission}
+              creator={application.applicant}
+              createdAt={application.applyTime}
+              reason={application.purpose}
+              requestName={application.requestName}
+            />
+          )}
+
+          <ApprovalProcessTable nodes={approvalNodes} applicant={application.applicant} applyTime={application.applyTime} />
         </div>
 
         <div className="space-y-6">
-          {renderFileStatusCard()}
-
+          {fileConfig && (
+            <Card>
+              <CardHeader><CardTitle>文件状态</CardTitle></CardHeader>
+              <CardContent>
+                <div className={`flex items-start gap-3 rounded-lg border p-4 ${fileConfig.color}`}>
+                  {fileConfig.icon}<div><p className="font-medium">{fileConfig.title}</p><p className="mt-1 text-sm text-muted-foreground">{fileConfig.description}</p></div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+          {application.requestType === '数据表权限' && application.status === '审批通过' && (
+            <Card><CardHeader><CardTitle>权限状态</CardTitle></CardHeader><CardContent><div className="rounded-lg border border-success/20 bg-success-light p-4 text-sm text-success">权限已生效，可在有效期内访问所申请的数据表。</div></CardContent></Card>
+          )}
           <Card>
-            <CardHeader>
-              <CardTitle>操作</CardTitle>
-            </CardHeader>
-            <CardContent>{renderActions()}</CardContent>
+            <CardHeader><CardTitle>操作</CardTitle></CardHeader>
+            <CardContent className="space-y-3">
+              {application.status === '审批中' && <Button variant="outline" className="w-full">撤回申请</Button>}
+              {application.status === '已驳回' && application.requestType === '数据下载' && <Button variant="outline" className="w-full" onClick={() => navigate('/download-demo')}><Copy className="mr-2 h-4 w-4" />复制并重新发起</Button>}
+              {application.requestType === '数据下载' && ['ready', 'downloaded'].includes(application.fileStatus || '') && <Button className="w-full" onClick={() => navigate(`/?requestId=${encodeURIComponent(application.id)}`)}><Download className="mr-2 h-4 w-4" />去下载中心</Button>}
+            </CardContent>
           </Card>
         </div>
       </div>
     </div>
   );
+}
+
+function Info({ label, value }: { label: string; value: string }) {
+  return <div><p className="mb-1 text-sm text-muted-foreground">{label}</p><p className="text-sm leading-relaxed text-foreground">{value}</p></div>;
+}
+
+function TagList({ label, values }: { label: string; values: string[] }) {
+  return <div><p className="mb-2 text-sm text-muted-foreground">{label}</p><div className="flex flex-wrap gap-2">{values.map((value) => <span key={value} className="rounded-md bg-secondary px-2.5 py-1 text-xs text-secondary-foreground">{value}</span>)}</div></div>;
 }

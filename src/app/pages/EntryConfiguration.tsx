@@ -25,7 +25,6 @@ import {
 } from '../components/ui/dropdown-menu';
 import { Card } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
-import { RiskLevelBadge } from '../components/download-center/RiskLevelBadge';
 import { EntryConfigEditor } from '../components/download-center/EntryConfigEditor';
 import { Alert, AlertDescription } from '../components/ui/alert';
 import {
@@ -43,7 +42,6 @@ import {
   MoreVertical,
 } from 'lucide-react';
 
-type RiskLevel = 'low' | 'medium' | 'high';
 type EntryStatus = '启用' | '停用';
 
 interface EntryConfig {
@@ -53,7 +51,6 @@ interface EntryConfig {
   module: string;
   page: string;
   dataType: string;
-  riskLevel: RiskLevel;
   approvalEnabled: boolean;
   status: EntryStatus;
   hasHealthIssue: boolean;
@@ -65,7 +62,6 @@ type PageState = 'loading' | 'error' | 'empty' | 'data';
 export default function EntryConfiguration() {
   const [pageState, setPageState] = useState<PageState>('data');
   const [module, setModule] = useState('');
-  const [riskLevel, setRiskLevel] = useState('');
   const [status, setStatus] = useState('');
   const [approvalEnabled, setApprovalEnabled] = useState('');
   const [editorOpen, setEditorOpen] = useState(false);
@@ -81,7 +77,6 @@ export default function EntryConfiguration() {
       module: '财务管理',
       page: '销售报表',
       dataType: '交易数据',
-      riskLevel: 'high',
       approvalEnabled: true,
       status: '启用',
       hasHealthIssue: false,
@@ -93,7 +88,6 @@ export default function EntryConfiguration() {
       module: '数据分析',
       page: '用户画像',
       dataType: '用户数据',
-      riskLevel: 'medium',
       approvalEnabled: true,
       status: '启用',
       hasHealthIssue: true,
@@ -106,7 +100,6 @@ export default function EntryConfiguration() {
       module: '客户管理',
       page: '客户列表',
       dataType: '客户数据',
-      riskLevel: 'high',
       approvalEnabled: true,
       status: '启用',
       hasHealthIssue: false,
@@ -118,7 +111,6 @@ export default function EntryConfiguration() {
       module: '订单管理',
       page: '订单中心',
       dataType: '订单数据',
-      riskLevel: 'low',
       approvalEnabled: true,
       status: '启用',
       hasHealthIssue: false,
@@ -130,7 +122,6 @@ export default function EntryConfiguration() {
       module: '人力资源',
       page: '绩效管理',
       dataType: 'HR数据',
-      riskLevel: 'medium',
       approvalEnabled: true,
       status: '停用',
       hasHealthIssue: false,
@@ -142,7 +133,6 @@ export default function EntryConfiguration() {
       module: '系统管理',
       page: '日志中心',
       dataType: '系统日志',
-      riskLevel: 'low',
       approvalEnabled: false,
       status: '启用',
       hasHealthIssue: false,
@@ -154,7 +144,6 @@ export default function EntryConfiguration() {
       module: '采购管理',
       page: '供应商管理',
       dataType: '供应商数据',
-      riskLevel: 'medium',
       approvalEnabled: true,
       status: '启用',
       hasHealthIssue: true,
@@ -167,7 +156,6 @@ export default function EntryConfiguration() {
       module: '财务管理',
       page: '报销管理',
       dataType: '财务数据',
-      riskLevel: 'medium',
       approvalEnabled: true,
       status: '启用',
       hasHealthIssue: false,
@@ -183,7 +171,6 @@ export default function EntryConfiguration() {
 
   const handleReset = () => {
     setModule('');
-    setRiskLevel('');
     setStatus('');
     setApprovalEnabled('');
   };
@@ -269,20 +256,6 @@ export default function EntryConfiguration() {
             </Select>
           </FilterItem>
 
-          <FilterItem label="风险等级">
-            <Select value={riskLevel} onValueChange={setRiskLevel}>
-              <SelectTrigger>
-                <SelectValue placeholder="全部等级" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">全部等级</SelectItem>
-                <SelectItem value="high">高风险</SelectItem>
-                <SelectItem value="medium">中风险</SelectItem>
-                <SelectItem value="low">低风险</SelectItem>
-              </SelectContent>
-            </Select>
-          </FilterItem>
-
           <FilterItem label="状态">
             <Select value={status} onValueChange={setStatus}>
               <SelectTrigger>
@@ -354,7 +327,6 @@ export default function EntryConfiguration() {
                     <TableHead className="font-semibold">所属模块</TableHead>
                     <TableHead className="font-semibold">所属页面</TableHead>
                     <TableHead className="font-semibold">数据类型</TableHead>
-                    <TableHead className="font-semibold">风险等级</TableHead>
                     <TableHead className="font-semibold">审批启用</TableHead>
                     <TableHead className="font-semibold">状态</TableHead>
                     <TableHead className="font-semibold text-right">操作</TableHead>
@@ -382,9 +354,6 @@ export default function EntryConfiguration() {
                       <TableCell className="text-text-secondary">{config.module}</TableCell>
                       <TableCell className="text-text-secondary">{config.page}</TableCell>
                       <TableCell className="text-text-secondary">{config.dataType}</TableCell>
-                      <TableCell>
-                        <RiskLevelBadge level={config.riskLevel} size="sm" showIcon={false} />
-                      </TableCell>
                       <TableCell>
                         {config.approvalEnabled ? (
                           <Badge className="bg-primary-light text-primary border border-primary/20">
@@ -459,7 +428,6 @@ export default function EntryConfiguration() {
           page: selectedEntry.page,
           buttonName: 'Export',
           dataType: selectedEntry.dataType,
-          riskLevel: selectedEntry.riskLevel,
           status: selectedEntry.status === '启用' ? 'enabled' : 'disabled'
         } : undefined}
         onSave={handleSaveEntry}
