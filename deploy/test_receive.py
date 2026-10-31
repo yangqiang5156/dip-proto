@@ -43,6 +43,9 @@ class DeploymentTests(unittest.TestCase):
         self.assertEqual((receive.PUBLIC / 'v2.1').resolve().name, 'v2.1.0')
         self.assertTrue((receive.ROOT / 'releases/v2.0.0/index.html').exists())
         self.assertIn('v2.0.0', (receive.ROOT / 'archives/v2.0.previous').read_text())
+        data = (receive.ROOT / 'archives/v2.0.1.tar.gz').read_bytes()
+        self.publish('v2.0.1', data)
+        self.assertIn('v2.0.0', (receive.ROOT / 'archives/v2.0.previous').read_text())
 
     def test_old_patch_cannot_replace_new_patch(self):
         self.publish('v2.0.2')

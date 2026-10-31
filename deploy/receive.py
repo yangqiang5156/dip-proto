@@ -81,7 +81,8 @@ def receive(command, stream):
                 record.write_text(digest + '\n')
                 shutil.copyfile(archive, ROOT / 'archives' / f'{tag}.tar.gz')
             if current.is_symlink():
-                (ROOT / 'archives' / f'{series}.previous').write_text(os.readlink(current) + '\n')
+                if current.resolve() != destination.resolve():
+                    (ROOT / 'archives' / f'{series}.previous').write_text(os.readlink(current) + '\n')
             elif current.exists():
                 raise ValueError('目标不是部署软链接，拒绝覆盖')
             pending = PUBLIC / f'.{series}.pending'
