@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -19,8 +19,12 @@ import {
   SelectValue,
 } from '../ui/select';
 import { Card } from '../ui/card';
-import { SystemBanner } from '../download-center/SystemBanner';
-import { AlertCircle, ChevronRight, Loader2 } from 'lucide-react';
+import {
+  DataClassificationApprovalFlow,
+  DataClassificationLevel,
+  SystemBanner,
+} from '../download-center';
+import { AlertCircle, Loader2 } from 'lucide-react';
 
 export interface DownloadContext {
   entryName: string;
@@ -30,12 +34,8 @@ export interface DownloadContext {
   buttonName: string;
   dataType: string;
   exportConditions: string;
-}
-
-export interface ApprovalChainNode {
-  name: string;
-  resolved: boolean;
-  error?: string;
+  classificationLevel?: DataClassificationLevel;
+  hasPersonalInfoOrCrossBorder?: boolean;
 }
 
 export type ModalState = 'normal' | 'no-config' | 'resolve-error' | 'submitting' | 'success';
@@ -44,7 +44,6 @@ interface DownloadRequestModalProps {
   open: boolean;
   onClose: () => void;
   context: DownloadContext;
-  approvalChain: ApprovalChainNode[];
   state?: ModalState;
   onSubmit: (data: {
     purpose: string;
@@ -57,7 +56,6 @@ export function DownloadRequestModal({
   open,
   onClose,
   context,
-  approvalChain,
   state = 'normal',
   onSubmit,
 }: DownloadRequestModalProps) {
@@ -66,7 +64,8 @@ export function DownloadRequestModal({
   const [remarks, setRemarks] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const hasApprovalError = approvalChain.some((node) => !node.resolved);
+  const classificationLevel = context.classificationLevel || 'S3';
+  const hasApprovalError = state === 'resolve-error';
 
   const handleSubmit = () => {
     const newErrors: Record<string, string> = {};
@@ -102,7 +101,7 @@ export function DownloadRequestModal({
         <DialogHeader>
           <DialogTitle className="text-xl">下载申请</DialogTitle>
           <DialogDescription className="text-sm text-text-secondary">
-            该下载操作需要审批，审批通过后可前往下载中心下载文件
+            系统将按导出字段最高密级自动匹配流程，审批通过后可前往下载中心下载文件
           </DialogDescription>
         </DialogHeader>
 
@@ -119,8 +118,8 @@ export function DownloadRequestModal({
           {hasApprovalError && state !== 'no-config' && (
             <SystemBanner
               type="error"
-              title="审批人识别失败"
-              message="审批人识别失败，请联系管理员检查组织架构或审批配置"
+              title="数据开发平台角色解析失败"
+              message="未能获取表对应的审批角色或人员，请联系数据开发平台管理员"
             />
           )}
 
@@ -153,6 +152,18 @@ export function DownloadRequestModal({
               <div>
                 <span className="text-text-secondary">数据类型:</span>
                 <p className="text-text-primary mt-0.5">{context.dataType}</p>
+              </div>
+              <div>
+                <span className="text-text-secondary">最高字段密级:</span>
+                <p className="mt-0.5 font-medium text-text-primary">
+                  {classificationLevel}
+                </p>
+              </div>
+              <div>
+                <span className="text-text-secondary">个人信息/跨境:</span>
+                <p className="mt-0.5 text-text-primary">
+                  {context.hasPersonalInfoOrCrossBorder ? '涉及' : '不涉及'}
+                </p>
               </div>
             </div>
           </Card>
@@ -236,33 +247,13 @@ export function DownloadRequestModal({
             </div>
           </div>
 
-          {/* Approval Chain Preview */}
-          {approvalChain.length > 0 && (
-            <Card className="p-4 bg-muted/30">
-              <h3 className="text-sm font-semibold text-text-primary mb-3">审批流程预览</h3>
-              <div className="flex items-center gap-2 flex-wrap">
-                {approvalChain.map((node, index) => (
-                  <React.Fragment key={index}>
-                    <div
-                      className={`px-3 py-1.5 rounded-md text-sm ${
-                        node.resolved
-                          ? 'bg-primary-light text-primary border border-primary/20'
-                          : 'bg-destructive-light text-destructive border border-destructive/20'
-                      }`}
-                    >
-                      {node.name}
-                      {!node.resolved && node.error && (
-                        <span className="ml-1 text-xs">({node.error})</span>
-                      )}
-                    </div>
-                    {index < approvalChain.length - 1 && (
-                      <ChevronRight className="w-4 h-4 text-text-tertiary" />
-                    )}
-                  </React.Fragment>
-                ))}
-              </div>
-            </Card>
-          )}
+          <Card className="bg-muted/30 p-4">
+            <h3 className="mb-3 text-sm font-semibold text-text-primary">审批流程预览</h3>
+            <DataClassificationApprovalFlow
+              level={classificationLevel}
+              hasPersonalInfoOrCrossBorder={context.hasPersonalInfoOrCrossBorder}
+            />
+          </Card>
         </div>
 
         <DialogFooter>

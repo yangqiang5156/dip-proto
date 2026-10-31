@@ -17,29 +17,17 @@ import {
   TableHeader,
   TableRow,
 } from '../components/ui/table';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '../components/ui/dropdown-menu';
-import { Card } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
 import { EntryConfigEditor } from '../components/download-center/EntryConfigEditor';
-import { Alert, AlertDescription } from '../components/ui/alert';
 import {
   Plus,
   Edit,
   Power,
-  Copy,
   CheckCircle2,
   XCircle,
-  AlertTriangle,
   Loader2,
   RotateCw,
-  ShieldAlert,
   FileCheck,
-  MoreVertical,
 } from 'lucide-react';
 
 type EntryStatus = '启用' | '停用';
@@ -53,8 +41,6 @@ interface EntryConfig {
   dataType: string;
   approvalEnabled: boolean;
   status: EntryStatus;
-  hasHealthIssue: boolean;
-  healthIssueMessage?: string;
 }
 
 type PageState = 'loading' | 'error' | 'empty' | 'data';
@@ -69,7 +55,7 @@ export default function EntryConfiguration() {
   const [selectedEntry, setSelectedEntry] = useState<EntryConfig | undefined>(undefined);
 
   // Mock data
-  const configs: EntryConfig[] = [
+  const [configs, setConfigs] = useState<EntryConfig[]>([
     {
       id: '1',
       entryId: 'ENTRY001',
@@ -79,7 +65,6 @@ export default function EntryConfiguration() {
       dataType: '交易数据',
       approvalEnabled: true,
       status: '启用',
-      hasHealthIssue: false,
     },
     {
       id: '2',
@@ -90,8 +75,6 @@ export default function EntryConfiguration() {
       dataType: '用户数据',
       approvalEnabled: true,
       status: '启用',
-      hasHealthIssue: true,
-      healthIssueMessage: '缺少安全部门审批节点',
     },
     {
       id: '3',
@@ -102,7 +85,6 @@ export default function EntryConfiguration() {
       dataType: '客户数据',
       approvalEnabled: true,
       status: '启用',
-      hasHealthIssue: false,
     },
     {
       id: '4',
@@ -113,7 +95,6 @@ export default function EntryConfiguration() {
       dataType: '订单数据',
       approvalEnabled: true,
       status: '启用',
-      hasHealthIssue: false,
     },
     {
       id: '5',
@@ -124,7 +105,6 @@ export default function EntryConfiguration() {
       dataType: 'HR数据',
       approvalEnabled: true,
       status: '停用',
-      hasHealthIssue: false,
     },
     {
       id: '6',
@@ -135,7 +115,6 @@ export default function EntryConfiguration() {
       dataType: '系统日志',
       approvalEnabled: false,
       status: '启用',
-      hasHealthIssue: false,
     },
     {
       id: '7',
@@ -146,8 +125,6 @@ export default function EntryConfiguration() {
       dataType: '供应商数据',
       approvalEnabled: true,
       status: '启用',
-      hasHealthIssue: true,
-      healthIssueMessage: '审批流程未完整配置',
     },
     {
       id: '8',
@@ -158,9 +135,8 @@ export default function EntryConfiguration() {
       dataType: '财务数据',
       approvalEnabled: true,
       status: '启用',
-      hasHealthIssue: false,
     },
-  ];
+  ]);
 
   const handleSearch = () => {
     setPageState('loading');
@@ -198,11 +174,11 @@ export default function EntryConfiguration() {
   };
 
   const handleToggleStatus = (id: string, currentStatus: EntryStatus) => {
-    console.log('Toggle status for:', id, 'from', currentStatus);
-  };
-
-  const handleCopy = (id: string) => {
-    console.log('Copy configuration:', id);
+    setConfigs((currentConfigs) => currentConfigs.map((config) => (
+      config.id === id
+        ? { ...config, status: currentStatus === '启用' ? '停用' : '启用' }
+        : config
+    )));
   };
 
   const handleSaveEntry = (data: any, enableOnSave: boolean) => {
@@ -231,7 +207,11 @@ export default function EntryConfiguration() {
   return (
     <div className="h-full flex flex-col">
       <div className="flex-1 p-6 overflow-auto">
-        <div className="mb-6 flex items-center justify-end">
+        <div className="mb-5 flex items-start justify-between gap-4">
+          <div>
+            <h1 className="text-xl font-semibold text-text-primary">入口配置</h1>
+            <p className="mt-1 text-sm text-text-secondary">维护数据下载入口及审批启用状态</p>
+          </div>
           <Button onClick={handleCreateEntry}>
             <Plus className="h-4 w-4 mr-2" />
             新建入口
@@ -334,23 +314,11 @@ export default function EntryConfiguration() {
                 </TableHeader>
                 <TableBody>
                   {configs.map((config) => (
-                    <TableRow
-                      key={config.id}
-                      className={`hover:bg-muted/30 ${
-                        config.hasHealthIssue ? 'bg-warning-light/10' : ''
-                      }`}
-                    >
+                    <TableRow key={config.id} className="hover:bg-muted/30">
                       <TableCell className="font-medium font-mono text-xs text-primary">
                         {config.entryId}
                       </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <span className="font-medium">{config.entryName}</span>
-                          {config.hasHealthIssue && (
-                            <AlertTriangle className="h-4 w-4 text-warning" title={config.healthIssueMessage} />
-                          )}
-                        </div>
-                      </TableCell>
+                      <TableCell className="font-medium">{config.entryName}</TableCell>
                       <TableCell className="text-text-secondary">{config.module}</TableCell>
                       <TableCell className="text-text-secondary">{config.page}</TableCell>
                       <TableCell className="text-text-secondary">{config.dataType}</TableCell>
@@ -368,29 +336,20 @@ export default function EntryConfiguration() {
                       </TableCell>
                       <TableCell>{getStatusBadge(config.status)}</TableCell>
                       <TableCell className="text-right">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="sm">
-                              <MoreVertical className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => handleEdit(config.id)}>
-                              <Edit className="h-4 w-4 mr-2" />
-                              编辑
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() => handleToggleStatus(config.id, config.status)}
-                            >
-                              <Power className="h-4 w-4 mr-2" />
-                              {config.status === '启用' ? '停用' : '启用'}
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleCopy(config.id)}>
-                              <Copy className="h-4 w-4 mr-2" />
-                              复制配置
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                        <div className="flex items-center justify-end gap-1">
+                          <Button variant="ghost" size="sm" onClick={() => handleEdit(config.id)}>
+                            <Edit className="mr-1 h-4 w-4" />编辑
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className={config.status === '启用' ? 'text-destructive hover:bg-destructive/10 hover:text-destructive' : 'text-success hover:bg-success/10 hover:text-success'}
+                            onClick={() => handleToggleStatus(config.id, config.status)}
+                          >
+                            <Power className="mr-1 h-4 w-4" />
+                            {config.status === '启用' ? '停用' : '启用'}
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}

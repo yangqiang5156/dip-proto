@@ -1,0 +1,89 @@
+name: 发布并部署阿里云
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 已发布的正式版本（例如 v2.0.1）
+        required: true
+        type: string
+permissions:
+  contents: read
+concurrency:
+  group: dip-proto-production
+  cancel-in-progress: false
+jobs:
+  deploy:
+    if: github.event_name == 'workflow_dispatch' || !github.event.release.prerelease
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: 校验版本及发布分支
+        id: version
+        env:
+          RELEASE_TAG: ${{ github.event.release.tag_name || inputs.tag }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          [[ "$RELEASE_TAG" =~ ^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]] || exit 1
+          SERIES="${BASH_REMATCH[1]}.${BASH_REMATCH[2]}"
+          gh release view "$RELEASE_TAG" --json isDraft,isPrerelease --jq 'if .isDraft or .isPrerelease then error("需要正式发布版本") else true end'
+          git checkout --detach "refs/tags/$RELEASE_TAG"
+          git merge-base --is-ancestor HEAD "origin/release/$SERIES"
+          [[ "$(node -p 'require("./package.json").version')" == "${RELEASE_TAG#v}" ]]
+          echo "tag=$RELEASE_TAG" >> "$GITHUB_OUTPUT"
+          echo "base=/work/dip-proto/v$SERIES/" >> "$GITHUB_OUTPUT"
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.11.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: 构建指定版本
+        env:
+          VITE_BASE_PATH: ${{ steps.version.outputs.base }}
+          RELEASE_TAG: ${{ steps.version.outputs.tag }}
+          RELEASE_SHA: ${{ steps.version.outputs.sha }}
+        run: |
+          pnpm run build
+          node --input-type=module -e 'import fs from "node:fs"; fs.writeFileSync("dist/release.json", JSON.stringify({version:process.env.RELEASE_TAG,commit:process.env.RELEASE_SHA,basePath:process.env.VITE_BASE_PATH})+"\n")'
+          tar --sort=name --mtime=@0 --owner=0 --group=0 --numeric-owner -czf web.tar.gz -C dist .
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dip-proto-${{ steps.version.outputs.tag }}
+          path: web.tar.gz
+          retention-days: 90
+      - name: 通过受限 SSH 账号原子部署
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+          RELEASE_TAG: ${{ steps.version.outputs.tag }}
+          RELEASE_SHA: ${{ steps.version.outputs.sha }}
+        run: |
+          set -euo pipefail
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$DEPLOY_KEY" > ~/.ssh/dip_deploy
+          chmod 600 ~/.ssh/dip_deploy
+          printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          DIGEST=$(sha256sum web.tar.gz | cut -d ' ' -f 1)
+          ssh -i ~/.ssh/dip_deploy -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes -o BatchMode=yes "dip-deploy@$DEPLOY_HOST" "$RELEASE_TAG $RELEASE_SHA $DIGEST" < web.tar.gz
+      - name: 验证公网版本和深层页面
+        env:
+          BASE_PATH: ${{ steps.version.outputs.base }}
+          RELEASE_TAG: ${{ steps.version.outputs.tag }}
+          RELEASE_SHA: ${{ steps.version.outputs.sha }}
+        run: |
+          set -euo pipefail
+          curl --fail --retry 3 --retry-delay 2 "https://ai.liqi123.com${BASE_PATH}release.json" -o /tmp/release.json
+          node -e 'const m=require("/tmp/release.json"); if(m.version!==process.env.RELEASE_TAG || m.commit!==process.env.RELEASE_SHA || m.basePath!==process.env.BASE_PATH) process.exit(1)'
+          curl --fail --retry 3 "https://ai.liqi123.com${BASE_PATH}approval-center/my-applications" | grep -q '<div id="root">'
+          echo "部署成功：https://ai.liqi123.com${BASE_PATH}" >> "$GITHUB_STEP_SUMMARY"

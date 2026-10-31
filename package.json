@@ -1,7 +1,7 @@
 {
-  "name": "@figma/my-make-file",
+  "name": "dip-proto",
   "private": true,
-  "version": "0.6.0",
+  "version": "2.0.0",
   "type": "module",
   "scripts": {
     "build": "vite build",
@@ -81,5 +81,6 @@
     "react-dom": {
       "optional": true
     }
-  }
+  },
+  "packageManager": "pnpm@10.11.0"
 }

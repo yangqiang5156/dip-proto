@@ -62,12 +62,12 @@ const auditLogs: AuditLogEntry[] = [
   {
     id: '5', requestId: '-', entryName: '客户信息表', applicant: '-',
     operator: '系统管理员', category: '配置变更', operation: '新建配置', operationResult: 'success',
-    timestamp: '2026-04-28 13:45:30', remark: '创建新入口配置，风险等级: 高', ipAddress: '10.120.45.200',
+    timestamp: '2026-04-28 13:45:30', remark: '创建新入口配置，密级审批规则由数据开发平台提供', ipAddress: '10.120.45.200',
   },
   {
     id: '6', requestId: '-', entryName: '用户行为分析', applicant: '-',
     operator: '系统管理员', category: '配置变更', operation: '修改审批规则', operationResult: 'success',
-    timestamp: '2026-04-28 11:20:15', remark: '更新预制审批流程', ipAddress: '10.120.45.200',
+    timestamp: '2026-04-28 11:20:15', remark: '同步数据开发平台密级审批规则', ipAddress: '10.120.45.200',
   },
 ];
 
@@ -121,6 +121,11 @@ export default function AuditLogs() {
   return (
     <div className="h-full flex flex-col">
       <div className="flex-1 p-6 overflow-auto">
+        <div className="mb-5">
+          <h1 className="text-xl font-semibold text-text-primary">审计日志</h1>
+          <p className="mt-1 text-sm text-text-secondary">统一查看下载日志和配置变更日志</p>
+        </div>
+
         <FilterBar onSearch={handleSearch} onReset={handleReset}>
           <FilterItem label="申请单号">
             <Input placeholder="输入申请单号" value={requestId} onChange={(event) => setRequestId(event.target.value)} />

@@ -49,6 +49,7 @@ interface Application {
   id: string;
   requestId: string;
   requestType: RequestType;
+  classificationLevel?: string;
   requestName: string;
   module: string;
   applyTime: string;
@@ -60,9 +61,9 @@ interface Application {
 
 const applications: Application[] = [
   {
-    id: '1', requestId: 'DL20260429001', requestType: '数据下载', requestName: '销售分析报表导出',
+    id: '1', requestId: 'DL20260429001', requestType: '数据下载', classificationLevel: 'S3', requestName: '销售分析报表导出',
     module: '数据分析', applyTime: '2026-04-29 10:30:15', approvalStatus: '审批中',
-    currentNode: '部门主管', businessStatus: '未生成', canWithdraw: true,
+    currentNode: 'L3数据管家', businessStatus: '未生成', canWithdraw: true,
   },
   {
     id: 'table-request-1', requestId: 'TB20260710001', requestType: '数据表权限',
@@ -71,7 +72,13 @@ const applications: Application[] = [
     businessStatus: '待生效', canWithdraw: true,
   },
   {
-    id: '2', requestId: 'DL20260429002', requestType: '数据下载', requestName: '用户行为数据导出',
+    id: 'classification-downgrade-1', requestId: 'CL20260727001', requestType: '数据分级降级',
+    requestName: 'dwd_user_profile 字段分级 S4 → S2', module: '数据治理',
+    applyTime: '2026-07-27 10:18:32', approvalStatus: '审批中', currentNode: '技术负责人',
+    businessStatus: '待生效', canWithdraw: true,
+  },
+  {
+    id: '2', requestId: 'DL20260429002', requestType: '数据下载', classificationLevel: 'S3', requestName: '用户行为数据导出',
     module: '用户管理', applyTime: '2026-04-29 09:15:22', approvalStatus: '审批通过',
     currentNode: '-', businessStatus: '生成中', canWithdraw: false,
   },
@@ -82,23 +89,23 @@ const applications: Application[] = [
     businessStatus: '已生效', canWithdraw: false,
   },
   {
-    id: '3', requestId: 'DL20260428003', requestType: '数据下载', requestName: '订单明细导出',
+    id: '3', requestId: 'DL20260428003', requestType: '数据下载', classificationLevel: 'S2', requestName: '订单明细导出',
     module: '订单中心', applyTime: '2026-04-28 16:45:30', approvalStatus: '审批通过',
     currentNode: '-', businessStatus: '待下载', canWithdraw: false,
   },
   {
     id: 'table-request-3', requestId: 'TB20260428006', requestType: '数据表权限',
     requestName: 'dwd_customer_contact 客户触达明细', module: '营销数据集市',
-    applyTime: '2026-04-28 14:20:18', approvalStatus: '已驳回', currentNode: '安全审计',
+    applyTime: '2026-04-28 14:20:18', approvalStatus: '已驳回', currentNode: '信息安全',
     businessStatus: '待生效', canWithdraw: false,
   },
   {
-    id: '5', requestId: 'DL20260427005', requestType: '数据下载', requestName: '客户信息导出',
+    id: '5', requestId: 'DL20260427005', requestType: '数据下载', classificationLevel: 'S3', requestName: '客户信息导出',
     module: '客户管理', applyTime: '2026-04-27 11:35:42', approvalStatus: '审批通过',
     currentNode: '-', businessStatus: '已下载', canWithdraw: false,
   },
   {
-    id: '7', requestId: 'DL20260425007', requestType: '数据下载', requestName: '物流数据导出',
+    id: '7', requestId: 'DL20260425007', requestType: '数据下载', classificationLevel: 'S3', requestName: '物流数据导出',
     module: '物流管理', applyTime: '2026-04-25 09:50:33', approvalStatus: '审批通过',
     currentNode: '-', businessStatus: '生成失败', canWithdraw: false,
   },
@@ -177,6 +184,7 @@ export default function MyApplications() {
                 <SelectItem value="all">全部类型</SelectItem>
                 <SelectItem value="数据下载">数据下载</SelectItem>
                 <SelectItem value="数据表权限">数据表权限</SelectItem>
+                <SelectItem value="数据分级降级">数据分级降级</SelectItem>
               </SelectContent>
             </Select>
           </FilterItem>

@@ -28,6 +28,7 @@ interface ApprovalRecord {
   id: string;
   requestId: string;
   requestType: RequestType;
+  classificationLevel?: string;
   applicant: string;
   department: string;
   module: string;
@@ -35,37 +36,41 @@ interface ApprovalRecord {
   status: ApprovalStatus;
   currentNode: string;
   updatedAt: string;
-  isNew?: boolean;
 }
 
 const records: ApprovalRecord[] = [
   {
-    id: '1', requestId: 'DL202604290015', requestType: '数据下载', applicant: '李明', department: '产品部',
+    id: '1', requestId: 'DL202604290015', requestType: '数据下载', classificationLevel: 'S3', applicant: '李明', department: '产品部',
     module: '数据分析', entryName: '用户行为分析', status: '待审批',
-    currentNode: '功能负责人', updatedAt: '2026-04-29 09:15:30', isNew: true,
+    currentNode: 'L3数据管家', updatedAt: '2026-04-29 09:15:30',
   },
   {
-    id: '2', requestId: 'DL202604290012', requestType: '数据下载', applicant: '王芳', department: '财务部',
+    id: '2', requestId: 'DL202604290012', requestType: '数据下载', classificationLevel: 'S4', applicant: '王芳', department: '财务部',
     module: '财务管理', entryName: '销售数据导出', status: '待审批',
-    currentNode: '功能负责人', updatedAt: '2026-04-29 08:30:15', isNew: true,
+    currentNode: '直线', updatedAt: '2026-04-29 08:30:15',
   },
   {
     id: 'table-approval-1', requestId: 'TB20260710001', requestType: '数据表权限', applicant: '杨强', department: '智慧家庭平台',
     module: '权限管理', entryName: '物理表：PROD-t05_ai_nlp_wakeup_log（语音唤醒日志）权限审批申请', status: '待审批',
-    currentNode: '数据Owner', updatedAt: '2026-07-10 14:22:17', isNew: true,
+    currentNode: '数据Owner', updatedAt: '2026-07-10 14:22:17',
   },
   {
-    id: '3', requestId: 'DL202604280097', requestType: '数据下载', applicant: '张敏', department: '市场部',
+    id: 'classification-downgrade-1', requestId: 'CL20260727001', requestType: '数据分级降级', applicant: '杨强', department: '智慧家庭平台',
+    module: '数据治理', entryName: 'dwd_user_profile 字段分级 S4 → S2', status: '待审批',
+    currentNode: '技术负责人', updatedAt: '2026-07-27 10:18:32',
+  },
+  {
+    id: '3', requestId: 'DL202604280097', requestType: '数据下载', classificationLevel: 'S3', applicant: '张敏', department: '市场部',
     module: '客户管理', entryName: '客户信息表', status: '待审批',
-    currentNode: '功能负责人', updatedAt: '2026-04-28 16:45:10',
+    currentNode: 'L3数据管家', updatedAt: '2026-04-28 16:45:10',
   },
   {
-    id: '4', requestId: 'DL202604280075', requestType: '数据下载', applicant: '刘强', department: '运营部',
+    id: '4', requestId: 'DL202604280075', requestType: '数据下载', classificationLevel: 'S2', applicant: '刘强', department: '运营部',
     module: '订单管理', entryName: '订单明细', status: '待审批',
-    currentNode: '功能负责人', updatedAt: '2026-04-28 14:20:30',
+    currentNode: 'L3数据管家', updatedAt: '2026-04-28 14:20:30',
   },
   {
-    id: '5', requestId: 'DL202604280056', requestType: '数据下载', applicant: '陈华', department: '人力资源部',
+    id: '5', requestId: 'DL202604280056', requestType: '数据下载', classificationLevel: 'S4', applicant: '陈华', department: '人力资源部',
     module: '人力资源', entryName: '员工绩效数据', status: '审批通过',
     currentNode: '流程结束', updatedAt: '2026-04-28 11:40:22',
   },
@@ -80,7 +85,7 @@ const records: ApprovalRecord[] = [
     currentNode: '数据Owner', updatedAt: '2026-04-27 10:25:15',
   },
   {
-    id: '8', requestId: 'DL202604260123', requestType: '数据下载', applicant: '郑丽', department: '财务部',
+    id: '8', requestId: 'DL202604260123', requestType: '数据下载', classificationLevel: 'S2', applicant: '郑丽', department: '财务部',
     module: '财务管理', entryName: '费用报销明细', status: '审批通过',
     currentNode: '流程结束', updatedAt: '2026-04-26 14:50:40',
   },
@@ -129,6 +134,11 @@ export default function MyApprovals() {
   return (
     <div className="h-full flex flex-col">
       <div className="flex-1 p-6 overflow-auto">
+        <div className="mb-5">
+          <h1 className="text-xl font-semibold text-text-primary">我的审批</h1>
+          <p className="mt-1 text-sm text-text-secondary">统一处理和查看数据下载、数据表权限及数据分级降级审批</p>
+        </div>
+
         <FilterBar onSearch={handleSearch} onReset={handleReset}>
           <FilterItem label="申请单号">
             <Input placeholder="请输入申请单号" value={requestId} onChange={(event) => setRequestId(event.target.value)} />
@@ -146,6 +156,7 @@ export default function MyApprovals() {
                 <SelectItem value="all">全部类型</SelectItem>
                 <SelectItem value="数据下载">数据下载</SelectItem>
                 <SelectItem value="数据表权限">数据表权限</SelectItem>
+                <SelectItem value="数据分级降级">数据分级降级</SelectItem>
               </SelectContent>
             </Select>
           </FilterItem>
@@ -205,7 +216,6 @@ export default function MyApprovals() {
                     <TableRow key={record.id} className="hover:bg-muted/30">
                       <TableCell className="font-mono text-xs font-medium text-primary">
                         <span>{record.requestId}</span>
-                        {record.isNew && <span className="ml-2 rounded bg-primary px-1.5 py-0.5 text-[10px] text-primary-foreground">新</span>}
                       </TableCell>
                       <TableCell><RequestTypeBadge type={record.requestType} /></TableCell>
                       <TableCell className="font-medium">{record.applicant}</TableCell>

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router';
-import { PageHeader, FilterBar, FilterItem, EmptyState } from '../components/enterprise';
+import { FilterBar, FilterItem, EmptyState } from '../components/enterprise';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import {
@@ -53,9 +53,10 @@ export default function DownloadableFiles() {
   const [requestId, setRequestId] = useState(searchParams.get('requestId') || '');
   const [fileStatus, setFileStatus] = useState('all');
   const [entryName, setEntryName] = useState('');
+  const [regenerationNotice, setRegenerationNotice] = useState('');
 
   // Mock data
-  const files: DownloadableFile[] = [
+  const [files, setFiles] = useState<DownloadableFile[]>([
     {
       id: '1',
       fileName: '用户行为分析_Q1.xlsx',
@@ -110,7 +111,7 @@ export default function DownloadableFiles() {
       status: '待下载',
       downloadUrl: '/downloads/logs_20260427.xlsx',
     },
-  ];
+  ]);
 
   useEffect(() => {
     setRequestId(searchParams.get('requestId') || '');
@@ -121,7 +122,7 @@ export default function DownloadableFiles() {
     (fileStatus === 'all' || file.status === fileStatus)
     && file.requestId.toLowerCase().includes(requestId.trim().toLowerCase())
     && file.entryName.toLowerCase().includes(entryName.trim().toLowerCase())
-  )), [entryName, fileStatus, requestId]);
+  )), [entryName, fileStatus, files, requestId]);
 
   const handleSearch = () => {
     setPageState('loading');
@@ -149,6 +150,45 @@ export default function DownloadableFiles() {
   const handleDownload = (file: DownloadableFile) => {
     console.log('Downloading file:', file.fileName);
     // In a real app, this would trigger the actual download and log the action
+  };
+
+  const handleRegenerate = (file: DownloadableFile) => {
+    setRegenerationNotice(`申请单 ${file.requestId} 已提交重新生成，完成后即可下载。`);
+    setFiles((currentFiles) => currentFiles.map((currentFile) => (
+      currentFile.id === file.id
+        ? {
+            ...currentFile,
+            status: '文件生成中',
+            fileSize: '生成中',
+            errorMessage: undefined,
+          }
+        : currentFile
+    )));
+
+    setTimeout(() => {
+      const completedAt = new Date().toLocaleString('zh-CN', {
+        hour12: false,
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+      }).replaceAll('/', '-');
+
+      setFiles((currentFiles) => currentFiles.map((currentFile) => (
+        currentFile.id === file.id
+          ? {
+              ...currentFile,
+              status: '待下载',
+              fileSize: '2.6 MB',
+              generatedTime: completedAt,
+              downloadUrl: `/downloads/regenerated-${file.id}.xlsx`,
+            }
+          : currentFile
+      )));
+      setRegenerationNotice(`申请单 ${file.requestId} 文件重新生成完成，可立即下载。`);
+    }, 1800);
   };
 
   const getStatusConfig = (status: FileStatus) => {
@@ -184,16 +224,12 @@ export default function DownloadableFiles() {
 
   return (
     <div className="h-full flex flex-col">
-      <PageHeader
-        title="可下载文件"
-        description="查看和下载已审批通过的导出文件"
-        breadcrumbs={[
-          { label: '下载中心' },
-          { label: '可下载文件' },
-        ]}
-      />
-
       <div className="flex-1 p-6 overflow-auto">
+        <div className="mb-5">
+          <h1 className="text-xl font-semibold text-text-primary">可下载文件</h1>
+          <p className="mt-1 text-sm text-text-secondary">查看和下载已审批通过的导出文件</p>
+        </div>
+
         {/* Download Logging Notice */}
         <Alert className="mb-6 border-warning/50 bg-warning-light/30">
           <AlertCircle className="h-4 w-4 text-warning" />
@@ -207,6 +243,15 @@ export default function DownloadableFiles() {
             <Download className="h-4 w-4 text-primary" />
             <AlertDescription className="text-sm text-primary">
               已从“我的申请”定位申请单 {searchParams.get('requestId')} 对应的交付文件
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {regenerationNotice && (
+          <Alert className="mb-6 border-primary/30 bg-primary-light/40">
+            <RotateCw className="h-4 w-4 text-primary" />
+            <AlertDescription className="text-sm text-primary">
+              {regenerationNotice}
             </AlertDescription>
           </Alert>
         )}
@@ -339,7 +384,17 @@ export default function DownloadableFiles() {
                             </Button>
                           )}
                           {file.status === '文件生成中' && <span className="text-xs text-text-tertiary">生成完成后可下载</span>}
-                          {file.status === '生成失败' && <span className="text-xs text-destructive">暂不可下载</span>}
+                          {file.status === '生成失败' && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="text-primary hover:bg-primary/10 hover:text-primary"
+                              onClick={() => handleRegenerate(file)}
+                            >
+                              <RotateCw className="mr-1 h-4 w-4" />
+                              重新生成
+                            </Button>
+                          )}
                           {file.status === '已过期' && <span className="text-xs text-text-tertiary">已过期</span>}
                         </TableCell>
                       </TableRow>

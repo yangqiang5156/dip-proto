@@ -9,7 +9,20 @@ import { RadioGroup, RadioGroupItem } from '../components/ui/radio-group';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { Textarea } from '../components/ui/textarea';
 import { ApprovalNode } from '../components/download-center/ApprovalProgress';
-import { ApprovalProcessTable, RequestType, RequestTypeBadge, TablePermissionDetail } from '../components/approval-center';
+import {
+  DataClassificationApprovalFlow,
+  DataClassificationLevel,
+  getClassificationFlow,
+  getRoleDisplayName,
+} from '../components/download-center';
+import {
+  ApprovalProcessTable,
+  ClassificationDowngradeDetail,
+  ClassificationDowngradeDetailData,
+  RequestType,
+  RequestTypeBadge,
+  TablePermissionDetail,
+} from '../components/approval-center';
 
 type ApprovalStatus = 'pending' | 'approved' | 'rejected';
 type DecisionState = 'normal' | 'validating' | 'submitting' | 'success';
@@ -41,17 +54,20 @@ interface ApprovalRequest {
   approvalStatus: ApprovalStatus;
   decisionTime?: string;
   decisionOpinion?: string;
+  classificationLevel?: DataClassificationLevel;
+  hasPersonalInfoOrCrossBorder?: boolean;
   exportConditions?: { dateRange: string; filters: string[]; recordCount?: string };
   tablePermission?: TablePermission;
+  classificationDowngrade?: ClassificationDowngradeDetailData;
 }
 
 const requests: Record<string, ApprovalRequest> = {
-  '1': downloadRequest('1', 'DL202604290015', '李明', '产品部', '数据分析', '用户行为分析', 'pending'),
-  '2': downloadRequest('2', 'DL202604290012', '王芳', '财务部', '财务管理', '销售数据导出', 'pending'),
-  '3': downloadRequest('3', 'DL202604280097', '张敏', '市场部', '客户管理', '客户信息表', 'pending'),
-  '4': downloadRequest('4', 'DL202604280075', '刘强', '运营部', '订单管理', '订单明细', 'pending'),
-  '5': { ...downloadRequest('5', 'DL202604280056', '陈华', '人力资源部', '人力资源', '员工绩效数据', 'approved'), decisionTime: '2026-04-28 11:40:22', decisionOpinion: '数据范围合理，同意导出。' },
-  '8': { ...downloadRequest('8', 'DL202604260123', '郑丽', '财务部', '财务管理', '费用报销明细', 'approved'), decisionTime: '2026-04-26 14:50:40', decisionOpinion: '批准。' },
+  '1': downloadRequest('1', 'DL202604290015', '李明', '产品部', '数据分析', '用户行为分析', 'pending', 'S3', true),
+  '2': downloadRequest('2', 'DL202604290012', '王芳', '财务部', '财务管理', '销售数据导出', 'pending', 'S4', true),
+  '3': downloadRequest('3', 'DL202604280097', '张敏', '市场部', '客户管理', '客户信息表', 'pending', 'S3', false),
+  '4': downloadRequest('4', 'DL202604280075', '刘强', '运营部', '订单管理', '订单明细', 'pending', 'S2', false),
+  '5': { ...downloadRequest('5', 'DL202604280056', '陈华', '人力资源部', '人力资源', '员工绩效数据', 'approved', 'S4', true), decisionTime: '2026-04-28 11:40:22', decisionOpinion: '数据范围合理，同意导出。' },
+  '8': { ...downloadRequest('8', 'DL202604260123', '郑丽', '财务部', '财务管理', '费用报销明细', 'approved', 'S2', false), decisionTime: '2026-04-26 14:50:40', decisionOpinion: '批准。' },
   'table-approval-1': {
     id: 'table-approval-1', requestId: 'TB20260710001', requestType: '数据表权限', applicant: '杨强', department: '智慧家庭平台',
     module: '权限管理', requestName: '物理表：PROD-t05_ai_nlp_wakeup_log（语音唤醒日志）权限审批申请', applyTime: '2026-07-10 14:22:17',
@@ -73,18 +89,107 @@ const requests: Record<string, ApprovalRequest> = {
     decisionTime: '2026-04-27 10:25:15', decisionOpinion: '数据范围过大，请限定负责区域并缩短权限有效期。',
     tablePermission: { systemName: '营销数据集市', databaseName: 'marketing_dw', tableNames: ['dwd_customer_contact'], permissions: ['查询', '导出'], dataScope: '全国全部客户', validity: '长期' },
   },
+  'classification-downgrade-1': {
+    id: 'classification-downgrade-1', requestId: 'CL20260727001', requestType: '数据分级降级', applicant: '杨强', department: '智慧家庭平台',
+    module: '数据治理', requestName: 'dwd_user_profile 字段分级 S4 → S2', applyTime: '2026-07-27 10:18:32',
+    purpose: '字段已完成脱敏处理，业务侧仅用于内部聚合分析，申请调整数据分级。',
+    currentNode: '技术负责人', approvalStatus: 'pending',
+    classificationDowngrade: {
+      databaseName: 'user_profile_dw',
+      tableName: 'dwd_user_profile',
+      fields: ['mobile_phone', 'home_address'],
+      originalLevel: 'S4',
+      targetLevel: 'S2',
+      reason: '字段已完成脱敏处理，业务侧仅用于内部聚合分析，申请调整数据分级。',
+      technicalOwner: '陈晨（数据开发平台自动解析）',
+    },
+  },
 };
 
-function downloadRequest(id: string, requestId: string, applicant: string, department: string, module: string, requestName: string, approvalStatus: ApprovalStatus): ApprovalRequest {
+function downloadRequest(
+  id: string,
+  requestId: string,
+  applicant: string,
+  department: string,
+  module: string,
+  requestName: string,
+  approvalStatus: ApprovalStatus,
+  classificationLevel: DataClassificationLevel,
+  hasPersonalInfoOrCrossBorder: boolean,
+): ApprovalRequest {
+  const firstApprovalRole = getClassificationFlow(classificationLevel, hasPersonalInfoOrCrossBorder)
+    .find((step) => step.type === 'approval')?.name;
   return {
     id, requestId, requestType: '数据下载', applicant, department, module, page: '业务数据页面', requestName,
     applyTime: '2026-04-29 09:15:30', externalUse: false, purpose: '用于业务分析和阶段性经营复盘。',
-    remark: '数据仅限内部使用。', currentNode: approvalStatus === 'pending' ? '功能负责人' : '流程结束', approvalStatus,
+    remark: '数据仅限内部使用。', currentNode: approvalStatus === 'pending' ? (firstApprovalRole || '自动免审') : '流程结束', approvalStatus,
+    classificationLevel, hasPersonalInfoOrCrossBorder,
     exportConditions: { dateRange: '2026-04-22 至 2026-04-29', filters: ['有效数据', '所属区域：申请人负责区域'], recordCount: '约 45,000 条' },
   };
 }
 
 function approvalNodes(request: ApprovalRequest): ApprovalNode[] {
+  if (request.requestType === '数据分级降级') {
+    if (request.approvalStatus === 'approved') {
+      return [
+        { id: 'downgrade-owner', name: '技术负责人', status: 'approved', approver: '陈晨（我）', opinion: request.decisionOpinion || '同意降级。', time: request.decisionTime },
+        { id: 'downgrade-security', name: '信息安全', status: 'approved', approver: '王玮 / 李子超（或签）', opinion: '符合数据分级调整规范。', time: '2026-07-27 11:02:45' },
+      ];
+    }
+    if (request.approvalStatus === 'rejected') {
+      return [
+        { id: 'downgrade-owner', name: '技术负责人', status: 'rejected', approver: '陈晨（我）', opinion: request.decisionOpinion, time: request.decisionTime },
+        { id: 'downgrade-security', name: '信息安全', status: 'pending', approver: '流程已终止' },
+      ];
+    }
+    return [
+      { id: 'downgrade-owner', name: '技术负责人', status: 'current', approver: '陈晨（我）' },
+      { id: 'downgrade-security', name: '信息安全', status: 'pending', approver: '王玮 / 李子超（或签）' },
+    ];
+  }
+
+  if (request.requestType === '数据下载' && request.classificationLevel) {
+    const steps = getClassificationFlow(
+      request.classificationLevel,
+      request.hasPersonalInfoOrCrossBorder,
+    ).filter((step) => step.type !== 'initiator');
+    const firstApprovalIndex = steps.findIndex((step) => step.type === 'approval');
+    const rejectedIndex = Math.max(firstApprovalIndex, 0);
+
+    return steps.map((step, index) => {
+      const actionLabel = step.type === 'notification'
+        ? `卡片通知 · ${step.name}`
+        : step.type === 'automatic'
+          ? `自动规则 · ${step.name}`
+          : `审批节点 · ${step.name}`;
+      const isSystemStep = step.type !== 'approval';
+      let status: ApprovalNode['status'] = 'pending';
+
+      if (
+        request.approvalStatus === 'approved'
+        || isSystemStep && (step.type === 'automatic' || index < firstApprovalIndex)
+      ) {
+        status = 'approved';
+      } else if (request.approvalStatus === 'rejected') {
+        status = index < rejectedIndex ? 'approved' : index === rejectedIndex ? 'rejected' : 'pending';
+      } else if (index === firstApprovalIndex) {
+        status = 'current';
+      }
+
+      return {
+        id: `classification-${index}`,
+        name: step.name,
+        actionLabel,
+        status,
+        approver: getRoleDisplayName(step.name),
+        opinion: status === 'approved'
+          ? (step.type === 'notification' ? '卡片通知发送成功' : step.type === 'automatic' ? 'S1外部公开数据无需审批' : '同意')
+          : status === 'rejected' ? request.decisionOpinion : undefined,
+        time: status === 'approved' ? `2026-04-${27 + Math.min(index, 2)} ${15 + index}:20:10` : undefined,
+      };
+    });
+  }
+
   const ownerName = request.requestType === '数据表权限' ? '数据 Owner' : '功能负责人';
   if (request.approvalStatus === 'approved') {
     return [
@@ -153,7 +258,7 @@ export default function ApprovalDecision() {
       <div className="mb-6">
         <div className="mb-2 flex items-center gap-3">
           <h1 className="text-2xl">
-            {request.requestType === '数据表权限' ? request.requestName : '审批详情'}
+            {request.requestType === '数据下载' ? '审批详情' : request.requestName}
           </h1>
           <RequestTypeBadge type={request.requestType} />
           <span className={`rounded-md px-3 py-1 text-sm font-medium ${request.approvalStatus === 'approved' ? 'bg-success-light text-success' : request.approvalStatus === 'rejected' ? 'bg-destructive-light text-destructive' : 'bg-primary/10 text-primary'}`}>
@@ -173,8 +278,18 @@ export default function ApprovalDecision() {
               <Info label="申请人" value={request.applicant} /><Info label="所属部门" value={request.department} />
               <Info label="申请名称" value={request.requestName} /><Info label="所属系统/模块" value={request.module} />
               <Info label="申请时间" value={request.applyTime} />{request.externalUse !== undefined && <Info label="是否对外使用" value={request.externalUse ? '是' : '否'} />}
+              {request.classificationLevel && <Info label="最高字段密级" value={`${request.classificationLevel}（数据开发平台返回）`} />}
+              {request.classificationLevel === 'S3' && <Info label="个人信息/跨境" value={request.hasPersonalInfoOrCrossBorder ? '涉及' : '不涉及'} />}
               <div className="col-span-2"><Info label="申请用途" value={request.purpose} /></div>
               {request.remark && <div className="col-span-2"><Info label="补充说明" value={request.remark} /></div>}
+              {request.classificationLevel && (
+                <div className="col-span-2 rounded-lg border bg-muted/30 p-4">
+                  <DataClassificationApprovalFlow
+                    level={request.classificationLevel}
+                    hasPersonalInfoOrCrossBorder={request.hasPersonalInfoOrCrossBorder}
+                  />
+                </div>
+              )}
             </CardContent>
           </Card>}
 
@@ -188,6 +303,10 @@ export default function ApprovalDecision() {
               reason={request.purpose}
               requestName={request.requestName}
             />
+          )}
+
+          {request.classificationDowngrade && (
+            <ClassificationDowngradeDetail downgrade={request.classificationDowngrade} />
           )}
 
           <ApprovalProcessTable nodes={approvalNodes(request)} applicant={request.applicant} applyTime={request.applyTime} />

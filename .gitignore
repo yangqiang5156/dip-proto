@@ -27,3 +27,9 @@ yarn-error.log*
 # TypeScript and test caches
 *.tsbuildinfo
 coverage/
+
+# 本地认证及浏览器检查产物
+*auth*.png
+.playwright-mcp/
+output/playwright/
+__pycache__/

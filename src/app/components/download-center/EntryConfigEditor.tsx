@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import {
   Sheet,
   SheetContent,
@@ -18,15 +18,13 @@ import {
   SelectValue,
 } from '../ui/select';
 import { Switch } from '../ui/switch';
-import { Card } from '../ui/card';
-import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
+import { Alert, AlertDescription } from '../ui/alert';
 import { Separator } from '../ui/separator';
+import { DataClassificationFlowMatrix } from './DataClassificationApprovalFlow';
 import {
   AlertCircle,
-  ChevronRight,
   Settings,
   Loader2,
-  AlertTriangle,
   ShieldAlert,
 } from 'lucide-react';
 
@@ -40,12 +38,6 @@ interface EntryConfigData {
   buttonName: string;
   dataType: string;
   status: EntryStatus;
-}
-
-interface ApprovalChainPreview {
-  name: string;
-  resolved: boolean;
-  error?: string;
 }
 
 interface EntryConfigEditorProps {
@@ -74,16 +66,6 @@ export function EntryConfigEditor({
   const [approvalEnabled, setApprovalEnabled] = useState(true);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
-
-  // Mock approval chain
-  const approvalChain: ApprovalChainPreview[] = [
-    { name: '直属主管', resolved: true },
-    { name: '部门负责人', resolved: true },
-    { name: '安全部门', resolved: true },
-  ];
-
-  const hasApprovalError = approvalChain.some((node) => !node.resolved);
-  const hasIncompleteChain = approvalChain.length < 2;
 
   const handleSaveAndEnable = () => {
     const newErrors: Record<string, string> = {};
@@ -136,7 +118,10 @@ export function EntryConfigEditor({
 
   return (
     <Sheet open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
-      <SheetContent side="right" className="w-[600px] max-w-full p-0 flex flex-col gap-0">
+      <SheetContent
+        side="right"
+        className="w-1/2 max-w-none sm:max-w-none p-0 flex flex-col gap-0"
+      >
         <SheetHeader className="px-6 py-4 border-b border-border">
           <SheetTitle className="text-lg">入口配置</SheetTitle>
           <SheetDescription className="text-sm text-text-secondary">
@@ -145,27 +130,6 @@ export function EntryConfigEditor({
         </SheetHeader>
 
         <div className="flex-1 overflow-y-auto px-6 py-4 space-y-6">
-          {/* Risk and Validation Alerts */}
-          {hasApprovalError && (
-            <Alert variant="destructive">
-              <AlertTriangle className="h-4 w-4" />
-              <AlertTitle>审批人识别失败</AlertTitle>
-              <AlertDescription>
-                部分审批节点无法解析，请检查组织架构配置
-              </AlertDescription>
-            </Alert>
-          )}
-
-          {hasIncompleteChain && !hasApprovalError && (
-            <Alert className="border-warning bg-warning-light/20">
-              <AlertCircle className="h-4 w-4 text-warning" />
-              <AlertTitle className="text-warning">审批链不完整</AlertTitle>
-              <AlertDescription className="text-warning">
-                建议配置至少两级审批节点
-              </AlertDescription>
-            </Alert>
-          )}
-
           {errors.entryId && (
             <Alert variant="destructive">
               <AlertCircle className="h-4 w-4" />
@@ -348,7 +312,7 @@ export function EntryConfigEditor({
                 <div className="space-y-0.5">
                   <Label className="text-sm">启用审批</Label>
                   <p className="text-xs text-text-tertiary">
-                    开启后用户下载需经过审批流程
+                    开启后按导出字段最高密级自动匹配审批流程
                   </p>
                 </div>
                 <Switch
@@ -358,38 +322,13 @@ export function EntryConfigEditor({
               </div>
 
               {approvalEnabled && (
-                <>
-                  <Card className="p-4 bg-muted/30 space-y-3">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium text-text-secondary">
-                        审批链预览
-                      </span>
-                      <span className="text-xs text-text-tertiary">系统预制</span>
-                    </div>
-                    <div className="flex items-center gap-2 flex-wrap">
-                      {approvalChain.map((node, index) => (
-                        <React.Fragment key={index}>
-                          <div
-                            className={`px-3 py-1.5 rounded-md text-sm ${
-                              node.resolved
-                                ? 'bg-primary-light text-primary border border-primary/20'
-                                : 'bg-destructive-light text-destructive border border-destructive/20'
-                            }`}
-                          >
-                            {node.name}
-                            {!node.resolved && node.error && (
-                              <span className="ml-1 text-xs">({node.error})</span>
-                            )}
-                          </div>
-                          {index < approvalChain.length - 1 && (
-                            <ChevronRight className="w-4 h-4 text-text-tertiary" />
-                          )}
-                        </React.Fragment>
-                      ))}
-                    </div>
-                  </Card>
-
-                </>
+                <div className="space-y-3 rounded-lg bg-muted/30 p-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-text-secondary">密级审批规则</span>
+                    <span className="text-xs text-text-tertiary">只读 · 数据开发平台提供</span>
+                  </div>
+                  <DataClassificationFlowMatrix />
+                </div>
               )}
             </div>
           </div>

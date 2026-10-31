@@ -1,11 +1,25 @@
-import { useNavigate, useParams } from 'react-router';
-import { AlertCircle, ArrowLeft, CheckCircle2, Clock, Copy, Download, FileX, Loader2 } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { useNavigate, useParams, useSearchParams } from 'react-router';
+import { AlertCircle, ArrowLeft, CheckCircle2, Clock, Copy, Download, FileX, Loader2, RotateCw } from 'lucide-react';
 import { Alert, AlertDescription } from '../components/ui/alert';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { ApprovalNode } from '../components/download-center/ApprovalProgress';
+import {
+  DataClassificationApprovalFlow,
+  DataClassificationLevel,
+  getClassificationFlow,
+  getRoleDisplayName,
+} from '../components/download-center';
 import { ApprovalStatus, StatusBadge } from '../components/download-center/StatusBadge';
-import { ApprovalProcessTable, RequestType, RequestTypeBadge, TablePermissionDetail } from '../components/approval-center';
+import {
+  ApprovalProcessTable,
+  ClassificationDowngradeDetail,
+  ClassificationDowngradeDetailData,
+  RequestType,
+  RequestTypeBadge,
+  TablePermissionDetail,
+} from '../components/approval-center';
 
 type FileStatus = 'generating' | 'ready' | 'downloaded' | 'expired' | 'failed';
 
@@ -31,6 +45,8 @@ interface ApplicationDetail {
   purpose: string;
   remark?: string;
   externalUse?: boolean;
+  classificationLevel?: DataClassificationLevel;
+  hasPersonalInfoOrCrossBorder?: boolean;
   status: ApprovalStatus;
   errorMessage?: string;
   fileStatus?: FileStatus;
@@ -39,6 +55,7 @@ interface ApplicationDetail {
   fileSize?: string;
   exportConditions?: { dateRange: string; filters: string[] };
   tablePermission?: TablePermission;
+  classificationDowngrade?: ClassificationDowngradeDetailData;
 }
 
 const downloadApplications: Record<string, ApplicationDetail> = {
@@ -46,52 +63,54 @@ const downloadApplications: Record<string, ApplicationDetail> = {
     id: 'DL20260429001', requestType: '数据下载', requestName: '销售分析报表导出', module: '数据分析', page: '销售分析',
     applicant: '李明', department: '产品部', applyTime: '2026-04-29 10:30:15', externalUse: false,
     purpose: '用于本周经营分析，统计销售趋势和重点产品表现。',
-    remark: '数据仅限内部经营分析使用', status: '审批中',
+    remark: '数据仅限内部经营分析使用', status: '审批中', classificationLevel: 'S3', hasPersonalInfoOrCrossBorder: true,
     exportConditions: { dateRange: '2026-04-01 至 2026-04-29', filters: ['订单状态：已完成', '销售区域：全国'] },
   },
   '2': {
     id: 'DL20260429002', requestType: '数据下载', requestName: '用户行为数据导出', module: '用户管理', page: '用户画像',
     applicant: '李明', department: '产品部', applyTime: '2026-04-29 09:15:22', externalUse: false,
-    purpose: '用于产品使用行为分析和用户留存研究。', status: '审批通过', fileStatus: 'generating',
+    purpose: '用于产品使用行为分析和用户留存研究。', status: '审批通过', fileStatus: 'generating', classificationLevel: 'S3', hasPersonalInfoOrCrossBorder: true,
     exportConditions: { dateRange: '2026-04-01 至 2026-04-29', filters: ['活跃用户', '登录次数 > 5'] },
   },
   '3': {
     id: 'DL20260428003', requestType: '数据下载', requestName: '订单明细导出', module: '订单中心', page: '订单明细',
     applicant: '李明', department: '产品部', applyTime: '2026-04-28 16:45:30', externalUse: false,
-    purpose: '用于订单履约情况和产品销售趋势分析。', status: '审批通过', fileStatus: 'ready',
+    purpose: '用于订单履约情况和产品销售趋势分析。', status: '审批通过', fileStatus: 'ready', classificationLevel: 'S2', hasPersonalInfoOrCrossBorder: false,
     fileUrl: '/downloads/order_details_202604.xlsx', fileSize: '1.8 MB',
     exportConditions: { dateRange: '2026-04-01 至 2026-04-28', filters: ['订单状态：全部', '支付方式：在线支付'] },
   },
   '4': {
     id: 'DL202604260089', requestType: '数据下载', requestName: '订单明细', module: '订单管理', page: '订单中心',
     applicant: '刘强', department: '运营部', applyTime: '2026-04-26 09:20:45', externalUse: false,
-    purpose: '运营月报数据分析，统计三月份订单情况和销售趋势。', status: '审批通过', fileStatus: 'downloaded',
+    purpose: '运营月报数据分析，统计三月份订单情况和销售趋势。', status: '审批通过', fileStatus: 'downloaded', classificationLevel: 'S2', hasPersonalInfoOrCrossBorder: false,
     fileUrl: '/downloads/order_details_20260426.xlsx', downloadTime: '2026-04-26 18:30:12', fileSize: '5.7 MB',
     exportConditions: { dateRange: '2026-03-01 至 2026-03-31', filters: ['订单状态：全部', '支付方式：在线支付'] },
   },
   '6': {
     id: 'DL202604240123', requestType: '数据下载', requestName: '系统日志导出', module: '系统管理', page: '日志中心',
     applicant: '周杰', department: '技术部', applyTime: '2026-04-24 15:20:00', purpose: '用于线上故障定位。',
-    status: '审批通过', fileStatus: 'failed', errorMessage: '数据源连接超时，文件生成失败。',
+    status: '审批通过', fileStatus: 'failed', errorMessage: '数据源连接超时，文件生成失败。', classificationLevel: 'S2', hasPersonalInfoOrCrossBorder: false,
     exportConditions: { dateRange: '2026-04-24', filters: ['日志级别：ERROR'] },
   },
   '5': {
     id: 'DL20260427005', requestType: '数据下载', requestName: '客户信息导出', module: '客户管理', page: '客户列表',
     applicant: '李明', department: '产品部', applyTime: '2026-04-27 11:35:42', purpose: '用于客户结构分析和服务质量复盘。',
     status: '审批通过', fileStatus: 'downloaded', fileUrl: '/downloads/customer_data_east.xlsx',
+    classificationLevel: 'S3', hasPersonalInfoOrCrossBorder: true,
     downloadTime: '2026-04-28 14:15:22', fileSize: '5.7 MB',
     exportConditions: { dateRange: '全部时间', filters: ['所属区域：华东', '敏感字段：脱敏'] },
   },
   '7': {
     id: 'DL20260425007', requestType: '数据下载', requestName: '物流数据导出', module: '物流管理', page: '物流报表',
     applicant: '李明', department: '产品部', applyTime: '2026-04-25 09:50:33', purpose: '用于物流时效和异常订单分析。',
-    status: '审批通过', fileStatus: 'failed', errorMessage: '数据源连接超时，文件生成失败。',
+    status: '审批通过', fileStatus: 'failed', errorMessage: '数据源连接超时，文件生成失败。', classificationLevel: 'S3', hasPersonalInfoOrCrossBorder: false,
     exportConditions: { dateRange: '2026-04-01 至 2026-04-25', filters: ['配送状态：全部'] },
   },
   '8': {
     id: 'DL202604220134', requestType: '数据下载', requestName: '费用报销明细', module: '财务管理', page: '报销管理',
     applicant: '郑丽', department: '财务部', applyTime: '2026-04-22 14:10:00', purpose: '月度费用分析与预算执行复盘。',
-    status: '审批通过', fileStatus: 'generating', exportConditions: { dateRange: '2026-03-01 至 2026-03-31', filters: ['报销状态：已完成'] },
+    status: '审批通过', fileStatus: 'generating', classificationLevel: 'S4', hasPersonalInfoOrCrossBorder: true,
+    exportConditions: { dateRange: '2026-03-01 至 2026-03-31', filters: ['报销状态：已完成'] },
   },
 };
 
@@ -134,7 +153,70 @@ const tableApplications: Record<string, ApplicationDetail> = {
   },
 };
 
-const mockApplications = { ...downloadApplications, ...tableApplications };
+const classificationDowngradeApplications: Record<string, ApplicationDetail> = {
+  'classification-downgrade-1': {
+    id: 'CL20260727001', requestType: '数据分级降级', requestName: 'dwd_user_profile 字段分级 S4 → S2',
+    module: '数据治理', applicant: '杨强', department: '智慧家庭平台', applyTime: '2026-07-27 10:18:32',
+    purpose: '字段已完成脱敏处理，业务侧仅用于内部聚合分析，申请调整数据分级。', status: '审批中',
+    classificationDowngrade: {
+      databaseName: 'user_profile_dw',
+      tableName: 'dwd_user_profile',
+      fields: ['mobile_phone', 'home_address'],
+      originalLevel: 'S4',
+      targetLevel: 'S2',
+      reason: '字段已完成脱敏处理，业务侧仅用于内部聚合分析，申请调整数据分级。',
+      technicalOwner: '陈晨（数据开发平台自动解析）',
+    },
+  },
+  'classification-downgrade-2': {
+    id: 'CL20260726008', requestType: '数据分级降级', requestName: 'ads_device_active_summary 字段分级 S3 → S2',
+    module: '数据治理', applicant: '李明', department: '产品部', applyTime: '2026-07-26 16:42:10',
+    purpose: '区域编码已转换为统计维度，不再包含可识别个人或设备的信息。', status: '审批通过',
+    classificationDowngrade: {
+      databaseName: 'device_ads',
+      tableName: 'ads_device_active_summary',
+      fields: ['region_code'],
+      originalLevel: 'S3',
+      targetLevel: 'S2',
+      reason: '区域编码已转换为统计维度，不再包含可识别个人或设备的信息。',
+      technicalOwner: '赵海（数据开发平台自动解析）',
+    },
+  },
+  'classification-downgrade-3': {
+    id: 'CL20260725003', requestType: '数据分级降级', requestName: 'dwd_customer_contact 字段分级 S4 → S3',
+    module: '数据治理', applicant: '张敏', department: '市场部', applyTime: '2026-07-25 09:36:45',
+    purpose: '计划用于营销触达效果分析。', status: '已驳回',
+    errorMessage: '字段仍包含可直接识别客户的信息，暂不符合降级条件。',
+    classificationDowngrade: {
+      databaseName: 'customer_dwd',
+      tableName: 'dwd_customer_contact',
+      fields: ['contact_phone', 'contact_address'],
+      originalLevel: 'S4',
+      targetLevel: 'S3',
+      reason: '计划用于营销触达效果分析。',
+      technicalOwner: '周磊（数据开发平台自动解析）',
+    },
+  },
+};
+
+const mockApplications = { ...downloadApplications, ...tableApplications, ...classificationDowngradeApplications };
+
+function parseDowngradeItems(value: string | null): ClassificationDowngradeDetailData['items'] {
+  if (!value) return undefined;
+  try {
+    const items = JSON.parse(value);
+    if (!Array.isArray(items)) return undefined;
+    return items.filter((item) => (
+      item
+      && typeof item.field === 'string'
+      && typeof item.originalLevel === 'string'
+      && typeof item.targetLevel === 'string'
+      && typeof item.reason === 'string'
+    ));
+  } catch {
+    return undefined;
+  }
+}
 
 const defaultNodes: ApprovalNode[] = [
   { id: '1', name: '直属主管', status: 'approved', approver: '张敏', opinion: '业务用途明确，同意申请', time: '2026-04-29 11:30:10' },
@@ -143,6 +225,68 @@ const defaultNodes: ApprovalNode[] = [
 ];
 
 function getApprovalNodes(application: ApplicationDetail): ApprovalNode[] {
+  if (application.requestType === '数据分级降级') {
+    const technicalOwner = application.classificationDowngrade?.technicalOwner || '数据开发平台自动解析';
+    if (application.status === '审批通过') {
+      return [
+        { id: 'downgrade-owner', name: '技术负责人', status: 'approved', approver: technicalOwner, opinion: '字段使用范围和降级依据合理，同意。', time: '2026-07-27 10:35:18' },
+        { id: 'downgrade-security', name: '信息安全', status: 'approved', approver: '王玮 / 李子超（或签）', opinion: '符合数据分级调整规范。', time: '2026-07-27 11:02:45' },
+      ];
+    }
+    if (application.status === '已驳回') {
+      return [
+        { id: 'downgrade-owner', name: '技术负责人', status: 'rejected', approver: technicalOwner, opinion: application.errorMessage || '降级依据不足。', time: '2026-07-27 10:35:18' },
+        { id: 'downgrade-security', name: '信息安全', status: 'pending', approver: '流程已终止' },
+      ];
+    }
+    return [
+      { id: 'downgrade-owner', name: '技术负责人', status: 'current', approver: technicalOwner },
+      { id: 'downgrade-security', name: '信息安全', status: 'pending', approver: '王玮 / 李子超（或签）' },
+    ];
+  }
+
+  if (application.requestType === '数据下载' && application.classificationLevel) {
+    const steps = getClassificationFlow(
+      application.classificationLevel,
+      application.hasPersonalInfoOrCrossBorder,
+    ).filter((step) => step.type !== 'initiator');
+    const firstApprovalIndex = steps.findIndex((step) => step.type === 'approval');
+    const rejectedIndex = Math.max(firstApprovalIndex, 0);
+
+    return steps.map((step, index) => {
+      const actionLabel = step.type === 'notification'
+        ? `卡片通知 · ${step.name}`
+        : step.type === 'automatic'
+          ? `自动规则 · ${step.name}`
+          : `审批节点 · ${step.name}`;
+      const isSystemStep = step.type !== 'approval';
+      let status: ApprovalNode['status'] = 'pending';
+
+      if (
+        application.status === '审批通过'
+        || isSystemStep && (step.type === 'automatic' || index < firstApprovalIndex)
+      ) {
+        status = 'approved';
+      } else if (application.status === '已驳回') {
+        status = index < rejectedIndex ? 'approved' : index === rejectedIndex ? 'rejected' : 'pending';
+      } else if (index === firstApprovalIndex) {
+        status = 'current';
+      }
+
+      return {
+        id: `classification-${index}`,
+        name: step.name,
+        actionLabel,
+        status,
+        approver: getRoleDisplayName(step.name),
+        opinion: status === 'approved'
+          ? (step.type === 'notification' ? '卡片通知发送成功' : step.type === 'automatic' ? 'S1外部公开数据无需审批' : '同意')
+          : status === 'rejected' ? application.errorMessage : undefined,
+        time: status === 'approved' ? `2026-04-${27 + Math.min(index, 2)} ${15 + index}:20:10` : undefined,
+      };
+    });
+  }
+
   if (application.status === '审批通过') {
     return [
       { id: '1', name: '直属主管', status: 'approved', approver: '张敏', opinion: '同意', time: '2026-04-28 17:00:10' },
@@ -163,16 +307,55 @@ function getApprovalNodes(application: ApplicationDetail): ApprovalNode[] {
 export default function ApprovalDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const application = mockApplications[id || '1'] || mockApplications['1'];
+  const [searchParams] = useSearchParams();
+  const baseApplication = mockApplications[id || '1'] || mockApplications['1'];
+  const downgradeItems = parseDowngradeItems(searchParams.get('items'));
+  const application = id === 'classification-downgrade-1' && searchParams.has('databaseName')
+    ? {
+        ...baseApplication,
+        requestName: `${searchParams.get('tableName') || '数据表'} 字段分级 ${searchParams.get('originalLevel') || 'S4'} → ${searchParams.get('targetLevel') || 'S2'}`,
+        purpose: searchParams.get('reason') || baseApplication.purpose,
+        classificationDowngrade: {
+          databaseName: searchParams.get('databaseName') || 'user_profile_dw',
+          tableName: searchParams.get('tableName') || 'dwd_user_profile',
+          fields: (searchParams.get('fields') || 'mobile_phone').split(',').map((field) => field.trim()).filter(Boolean),
+          originalLevel: searchParams.get('originalLevel') || 'S4',
+          targetLevel: searchParams.get('targetLevel') || 'S2',
+          reason: searchParams.get('reason') || baseApplication.purpose,
+          technicalOwner: '陈晨（数据开发平台自动解析）',
+          items: downgradeItems,
+        },
+      }
+    : baseApplication;
   const approvalNodes = getApprovalNodes(application);
+  const [fileStatus, setFileStatus] = useState<FileStatus | undefined>(application.fileStatus);
+  const [generatedFileSize, setGeneratedFileSize] = useState(application.fileSize);
+  const [regenerationNotice, setRegenerationNotice] = useState('');
 
-  const fileConfig = application.fileStatus ? {
+  useEffect(() => {
+    setFileStatus(application.fileStatus);
+    setGeneratedFileSize(application.fileSize);
+    setRegenerationNotice('');
+  }, [application.fileSize, application.fileStatus, application.id]);
+
+  const fileConfig = fileStatus ? {
     generating: { icon: <Loader2 className="h-5 w-5 animate-spin text-info" />, title: '文件生成中', description: '系统正在生成导出文件，预计需要 3-5 分钟。', color: 'bg-info-light border-info/20' },
-    ready: { icon: <Download className="h-5 w-5 text-primary" />, title: '文件已就绪', description: `文件大小：${application.fileSize}`, color: 'bg-primary-light border-primary/20' },
+    ready: { icon: <Download className="h-5 w-5 text-primary" />, title: '文件已就绪', description: `文件大小：${generatedFileSize}`, color: 'bg-primary-light border-primary/20' },
     downloaded: { icon: <CheckCircle2 className="h-5 w-5 text-success" />, title: '文件可下载', description: `最近下载：${application.downloadTime}，7 天有效期内不限下载次数`, color: 'bg-success-light border-success/20' },
     expired: { icon: <Clock className="h-5 w-5 text-muted-foreground" />, title: '文件已过期', description: '文件已超过 7 天保留期限。', color: 'bg-muted border-border' },
     failed: { icon: <FileX className="h-5 w-5 text-destructive" />, title: '生成失败', description: application.errorMessage || '文件生成失败。', color: 'bg-destructive-light border-destructive/20' },
-  }[application.fileStatus] : null;
+  }[fileStatus] : null;
+
+  const handleRegenerate = () => {
+    setFileStatus('generating');
+    setRegenerationNotice(`申请单 ${application.id} 已提交重新生成，请稍候。`);
+
+    window.setTimeout(() => {
+      setGeneratedFileSize('2.6 MB');
+      setFileStatus('ready');
+      setRegenerationNotice(`申请单 ${application.id} 文件重新生成完成，可前往下载中心下载。`);
+    }, 1800);
+  };
 
   return (
     <div className="mx-auto max-w-7xl p-6">
@@ -182,7 +365,7 @@ export default function ApprovalDetail() {
       <div className="mb-6">
         <div className="mb-2 flex items-center gap-3">
           <h1 className="text-2xl">
-            {application.requestType === '数据表权限' ? application.requestName : '申请详情'}
+            {application.requestType === '数据下载' ? '申请详情' : application.requestName}
           </h1>
           <RequestTypeBadge type={application.requestType} />
           <StatusBadge status={application.status} />
@@ -209,8 +392,18 @@ export default function ApprovalDetail() {
               <Info label="所属部门" value={application.department} />
               <Info label="申请时间" value={application.applyTime} />
               {application.externalUse !== undefined && <Info label="是否对外使用" value={application.externalUse ? '是' : '否'} />}
+              {application.classificationLevel && <Info label="最高字段密级" value={`${application.classificationLevel}（数据开发平台返回）`} />}
+              {application.classificationLevel === 'S3' && <Info label="个人信息/跨境" value={application.hasPersonalInfoOrCrossBorder ? '涉及' : '不涉及'} />}
               <div className="col-span-2"><Info label="申请用途" value={application.purpose} /></div>
               {application.remark && <div className="col-span-2"><Info label="补充说明" value={application.remark} /></div>}
+              {application.classificationLevel && (
+                <div className="col-span-2 rounded-lg border bg-muted/30 p-4">
+                  <DataClassificationApprovalFlow
+                    level={application.classificationLevel}
+                    hasPersonalInfoOrCrossBorder={application.hasPersonalInfoOrCrossBorder}
+                  />
+                </div>
+              )}
             </CardContent>
           </Card>}
 
@@ -234,10 +427,22 @@ export default function ApprovalDetail() {
             />
           )}
 
+          {application.classificationDowngrade && (
+            <ClassificationDowngradeDetail downgrade={application.classificationDowngrade} />
+          )}
+
           <ApprovalProcessTable nodes={approvalNodes} applicant={application.applicant} applyTime={application.applyTime} />
         </div>
 
         <div className="space-y-6">
+          {regenerationNotice && (
+            <Alert className="border-primary/20 bg-primary-light">
+              {fileStatus === 'generating'
+                ? <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                : <CheckCircle2 className="h-4 w-4 text-success" />}
+              <AlertDescription className="text-foreground">{regenerationNotice}</AlertDescription>
+            </Alert>
+          )}
           {fileConfig && (
             <Card>
               <CardHeader><CardTitle>文件状态</CardTitle></CardHeader>
@@ -256,7 +461,17 @@ export default function ApprovalDetail() {
             <CardContent className="space-y-3">
               {application.status === '审批中' && <Button variant="outline" className="w-full">撤回申请</Button>}
               {application.status === '已驳回' && application.requestType === '数据下载' && <Button variant="outline" className="w-full" onClick={() => navigate('/download-demo')}><Copy className="mr-2 h-4 w-4" />复制并重新发起</Button>}
-              {application.requestType === '数据下载' && ['ready', 'downloaded'].includes(application.fileStatus || '') && <Button className="w-full" onClick={() => navigate(`/?requestId=${encodeURIComponent(application.id)}`)}><Download className="mr-2 h-4 w-4" />去下载中心</Button>}
+              {application.requestType === '数据下载' && fileStatus === 'failed' && (
+                <Button className="w-full" onClick={handleRegenerate}>
+                  <RotateCw className="mr-2 h-4 w-4" />重新生成
+                </Button>
+              )}
+              {application.requestType === '数据下载' && fileStatus === 'generating' && regenerationNotice && (
+                <Button className="w-full" disabled>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />正在重新生成
+                </Button>
+              )}
+              {application.requestType === '数据下载' && ['ready', 'downloaded'].includes(fileStatus || '') && <Button className="w-full" onClick={() => navigate(`/?requestId=${encodeURIComponent(application.id)}`)}><Download className="mr-2 h-4 w-4" />去下载中心</Button>}
             </CardContent>
           </Card>
         </div>

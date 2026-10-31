@@ -70,7 +70,7 @@ export function ApprovalProcessTable({ nodes, applicant, applyTime }: ApprovalPr
                   <TableCell className="pl-6">
                     <div className="flex items-center gap-2">
                       <StatusIcon className={`h-4 w-4 ${config.className}`} />
-                      <span>审批权限 · {node.name}</span>
+                      <span>{node.actionLabel || `审批节点 · ${node.name}`}</span>
                     </div>
                   </TableCell>
                   <TableCell className={config.className}>{config.label}</TableCell>

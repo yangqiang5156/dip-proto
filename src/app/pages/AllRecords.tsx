@@ -27,6 +27,7 @@ interface AdminRecord {
   id: string;
   requestId: string;
   requestType: RequestType;
+  classificationLevel?: string;
   applicant: string;
   department: string;
   module: string;
@@ -39,9 +40,9 @@ interface AdminRecord {
 
 const records: AdminRecord[] = [
   {
-    id: '1', requestId: 'DL202604290031', requestType: '数据下载', applicant: '李明', department: '产品部',
+    id: '1', requestId: 'DL202604290031', requestType: '数据下载', classificationLevel: 'S3', applicant: '李明', department: '产品部',
     module: '数据分析', requestName: '用户行为分析', approvalStatus: '审批中',
-    businessStatus: '未生成', lastOperationTime: '2026-04-29 14:35:10', operator: '张敏（直属领导）',
+    businessStatus: '未生成', lastOperationTime: '2026-04-29 14:35:10', operator: '李晨（L3数据管家）',
   },
   {
     id: 'table-approval-1', requestId: 'TB202604290030', requestType: '数据表权限', applicant: '王芳', department: '财务部',
@@ -49,9 +50,9 @@ const records: AdminRecord[] = [
     businessStatus: '待生效', lastOperationTime: '2026-04-29 13:20:16', operator: '周强（数据Owner）',
   },
   {
-    id: '2', requestId: 'DL202604290028', requestType: '数据下载', applicant: '王芳', department: '财务部',
+    id: '2', requestId: 'DL202604290028', requestType: '数据下载', classificationLevel: 'S4', applicant: '王芳', department: '财务部',
     module: '财务管理', requestName: '销售数据导出', approvalStatus: '已驳回',
-    businessStatus: '未生成', lastOperationTime: '2026-04-29 11:05:40', operator: '周强（功能负责人）',
+    businessStatus: '未生成', lastOperationTime: '2026-04-29 11:05:40', operator: '王芳（小微主）',
   },
   {
     id: 'table-request-2', requestId: 'TB202604280156', requestType: '数据表权限', applicant: '张敏', department: '市场部',
@@ -59,12 +60,12 @@ const records: AdminRecord[] = [
     businessStatus: '已生效', lastOperationTime: '2026-04-28 17:45:33', operator: '系统',
   },
   {
-    id: '3', requestId: 'DL202604280155', requestType: '数据下载', applicant: '张敏', department: '市场部',
+    id: '3', requestId: 'DL202604280155', requestType: '数据下载', classificationLevel: 'S3', applicant: '张敏', department: '市场部',
     module: '客户管理', requestName: '客户信息表', approvalStatus: '审批通过',
     businessStatus: '待下载', lastOperationTime: '2026-04-27 17:45:33', operator: '系统',
   },
   {
-    id: '4', requestId: 'DL202604260089', requestType: '数据下载', applicant: '刘强', department: '运营部',
+    id: '4', requestId: 'DL202604260089', requestType: '数据下载', classificationLevel: 'S2', applicant: '刘强', department: '运营部',
     module: '订单管理', requestName: '订单明细', approvalStatus: '审批通过',
     businessStatus: '已下载', lastOperationTime: '2026-04-26 18:30:12', operator: '李明（申请人）',
   },
@@ -74,7 +75,7 @@ const records: AdminRecord[] = [
     businessStatus: '待生效', lastOperationTime: '2026-04-25 12:05:15', operator: '安全审计组',
   },
   {
-    id: '6', requestId: 'DL202604240123', requestType: '数据下载', applicant: '周杰', department: '技术部',
+    id: '6', requestId: 'DL202604240123', requestType: '数据下载', classificationLevel: 'S2', applicant: '周杰', department: '技术部',
     module: '系统管理', requestName: '系统日志导出', approvalStatus: '审批通过',
     businessStatus: '生成失败', lastOperationTime: '2026-04-24 16:45:30', operator: '系统',
   },
@@ -84,7 +85,7 @@ const records: AdminRecord[] = [
     businessStatus: '已回收', lastOperationTime: '2026-04-23 10:25:15', operator: '系统',
   },
   {
-    id: '8', requestId: 'DL202604220134', requestType: '数据下载', applicant: '郑丽', department: '财务部',
+    id: '8', requestId: 'DL202604220134', requestType: '数据下载', classificationLevel: 'S4', applicant: '郑丽', department: '财务部',
     module: '财务管理', requestName: '费用报销明细', approvalStatus: '审批通过',
     businessStatus: '生成中', lastOperationTime: '2026-04-22 14:50:40', operator: '系统',
   },
@@ -225,6 +226,7 @@ export default function AllRecords() {
                   <TableRow className="bg-muted/50">
                     <TableHead className="font-semibold">申请单号</TableHead>
                     <TableHead className="font-semibold">申请类型</TableHead>
+                    <TableHead className="font-semibold">最高字段密级</TableHead>
                     <TableHead className="font-semibold">申请人</TableHead>
                     <TableHead className="font-semibold">部门</TableHead>
                     <TableHead className="font-semibold">所属系统/模块</TableHead>
@@ -241,6 +243,11 @@ export default function AllRecords() {
                     <TableRow key={record.requestId} className="hover:bg-muted/30">
                       <TableCell className="font-mono text-xs font-medium text-primary">{record.requestId}</TableCell>
                       <TableCell><RequestTypeBadge type={record.requestType} /></TableCell>
+                      <TableCell>
+                        {record.classificationLevel
+                          ? <span className="rounded-md border border-primary/20 bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">{record.classificationLevel}</span>
+                          : <span className="text-text-tertiary">-</span>}
+                      </TableCell>
                       <TableCell className="font-medium">{record.applicant}</TableCell>
                       <TableCell className="text-text-secondary">{record.department}</TableCell>
                       <TableCell className="text-text-secondary">{record.module}</TableCell>

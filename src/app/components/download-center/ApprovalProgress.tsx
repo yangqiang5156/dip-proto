@@ -4,6 +4,7 @@ import { Check, X, Clock } from 'lucide-react';
 export interface ApprovalNode {
   id: string;
   name: string;
+  actionLabel?: string;
   status: 'pending' | 'approved' | 'rejected' | 'current';
   approver?: string;
   opinion?: string;

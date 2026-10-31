@@ -17,3 +17,14 @@ export type { AuditLogEntry } from './AuditLogTable';
 export { StatusBadge } from './StatusBadge';
 export type { ApprovalStatus } from './StatusBadge';
 export { EntryConfigEditor } from './EntryConfigEditor';
+export {
+  DataClassificationApprovalFlow,
+  DataClassificationFlowMatrix,
+  getApprovalRoleNames,
+  getClassificationFlow,
+  getRoleDisplayName,
+} from './DataClassificationApprovalFlow';
+export type {
+  ClassificationFlowStep,
+  DataClassificationLevel,
+} from './DataClassificationApprovalFlow';

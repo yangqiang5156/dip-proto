@@ -6,18 +6,18 @@ import {
   List,
   Settings,
   FileSearch,
+  MessageSquareText,
+  ShieldCheck,
   ChevronDown,
   User,
   LayoutGrid,
 } from 'lucide-react';
 import { useState } from 'react';
-import { Badge } from '../ui/badge';
 
 interface MenuItem {
   label: string;
   path: string;
   icon: any;
-  badge?: number;
   activePrefixes?: string[];
 }
 
@@ -38,15 +38,18 @@ const approvalMenuItems: MenuItem[] = [
     label: '我的审批',
     path: '/approval-center/my-approvals',
     icon: ClipboardCheck,
-    badge: 5,
     activePrefixes: ['/approval-center/approval/'],
   },
   { label: '全部记录', path: '/approval-center/all-records', icon: List },
 ];
 
 export function EnterpriseLayout() {
-  const [demoMenuOpen, setDemoMenuOpen] = useState(false);
   const location = useLocation();
+  const [demoMenuOpen, setDemoMenuOpen] = useState(
+    () => location.pathname === '/download-demo'
+      || location.pathname === '/feishu-card-demo'
+      || location.pathname.startsWith('/data-classification-downgrade-demo'),
+  );
   const isApprovalCenter = location.pathname.startsWith('/approval-center');
   const menuItems = isApprovalCenter ? approvalMenuItems : downloadMenuItems;
 
@@ -135,14 +138,6 @@ export function EnterpriseLayout() {
                     <span className="truncate">{item.label}</span>
                   </div>
 
-                  {item.badge && item.badge > 0 && (
-                    <Badge
-                      variant={isActive ? 'default' : 'secondary'}
-                      className="h-5 min-w-5 px-1.5 text-xs"
-                    >
-                      {item.badge}
-                    </Badge>
-                  )}
                 </NavLink>
               );
             })}
@@ -168,10 +163,36 @@ export function EnterpriseLayout() {
               <div className="mt-1 space-y-1">
                 <NavLink
                   to="/download-demo"
-                  className="flex items-center gap-2 px-3 py-2 rounded-md text-sm text-text-tertiary hover:text-text-primary hover:bg-muted transition-colors"
+                  className={({ isActive }) => `flex items-center gap-2 px-3 py-2 rounded-md text-sm transition-colors ${
+                    isActive
+                      ? 'bg-sidebar-accent text-sidebar-accent-foreground font-medium'
+                      : 'text-text-tertiary hover:text-text-primary hover:bg-muted'
+                  }`}
                 >
                   <Download className="w-4 h-4" />
                   <span>下载Demo</span>
+                </NavLink>
+                <NavLink
+                  to="/feishu-card-demo"
+                  className={({ isActive }) => `flex items-center gap-2 px-3 py-2 rounded-md text-sm transition-colors ${
+                    isActive
+                      ? 'bg-sidebar-accent text-sidebar-accent-foreground font-medium'
+                      : 'text-text-tertiary hover:text-text-primary hover:bg-muted'
+                  }`}
+                >
+                  <MessageSquareText className="w-4 h-4" />
+                  <span>飞书卡片Demo</span>
+                </NavLink>
+                <NavLink
+                  to="/data-classification-downgrade-demo"
+                  className={({ isActive }) => `flex items-center gap-2 px-3 py-2 rounded-md text-sm transition-colors ${
+                    isActive
+                      ? 'bg-sidebar-accent text-sidebar-accent-foreground font-medium'
+                      : 'text-text-tertiary hover:text-text-primary hover:bg-muted'
+                  }`}
+                >
+                  <ShieldCheck className="w-4 h-4" />
+                  <span>数据分级降级</span>
                 </NavLink>
               </div>
             )}

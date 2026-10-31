@@ -8,7 +8,7 @@ import {
   TableHeader,
   TableRow,
 } from '../components/ui/table';
-import { DownloadRequestModal, DownloadContext, ApprovalChainNode } from '../components/enterprise/DownloadRequestModal';
+import { DownloadRequestModal, DownloadContext } from '../components/enterprise/DownloadRequestModal';
 import { Download } from 'lucide-react';
 
 interface SalesData {
@@ -107,13 +107,9 @@ export default function DownloadDemo() {
     buttonName: '导出数据',
     dataType: '销售订单数据',
     exportConditions: `导出范围: 2026年4月26日 - 2026年4月29日，共 ${salesData.length} 条订单记录，包含客户名称、订单金额等敏感信息`,
+    classificationLevel: 'S3',
+    hasPersonalInfoOrCrossBorder: true,
   };
-
-  const approvalChain: ApprovalChainNode[] = [
-    { name: '直属主管', resolved: true },
-    { name: '功能负责人', resolved: true },
-    { name: '安全审批组', resolved: true },
-  ];
 
   const handleDownloadClick = () => {
     setModalOpen(true);
@@ -130,6 +126,11 @@ export default function DownloadDemo() {
   return (
     <div className="h-full flex flex-col">
       <div className="flex-1 p-6 overflow-auto">
+        <div className="mb-5">
+          <h1 className="text-xl font-semibold text-text-primary">下载Demo</h1>
+          <p className="mt-1 text-sm text-text-secondary">演示从业务页面发起数据下载申请</p>
+        </div>
+
         <div className="bg-white rounded-lg border border-border">
           {/* Table Header with Download Button */}
           <div className="flex items-center justify-between p-4 border-b border-border">
@@ -203,7 +204,6 @@ export default function DownloadDemo() {
         open={modalOpen}
         onClose={() => setModalOpen(false)}
         context={downloadContext}
-        approvalChain={approvalChain}
         onSubmit={handleSubmit}
       />
     </div>

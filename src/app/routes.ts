@@ -10,6 +10,9 @@ import EntryConfiguration from "./pages/EntryConfiguration";
 import AuditLogs from "./pages/AuditLogs";
 import DownloadDemo from "./pages/DownloadDemo";
 import DownloadableFiles from "./pages/DownloadableFiles";
+import FeishuCardDemo from "./pages/FeishuCardDemo";
+import DataClassificationDowngradeDemo from "./pages/DataClassificationDowngradeDemo";
+import NewDataClassificationDowngrade from "./pages/NewDataClassificationDowngrade";
 
 const createRouter =
   import.meta.env.VITE_STANDALONE === "true" || window.location.protocol === "file:"
@@ -26,6 +29,9 @@ export const router = createRouter([
       { path: "export-center", Component: ExportCenter },
       { path: "audit-logs", Component: AuditLogs },
       { path: "download-demo", Component: DownloadDemo },
+      { path: "feishu-card-demo", Component: FeishuCardDemo },
+      { path: "data-classification-downgrade-demo", Component: DataClassificationDowngradeDemo },
+      { path: "data-classification-downgrade-demo/new", Component: NewDataClassificationDowngrade },
       { path: "approval-center", loader: () => redirect("/approval-center/my-applications") },
       { path: "approval-center/my-applications", Component: MyApplications },
       { path: "approval-center/request/:id", Component: ApprovalDetail },
@@ -42,4 +48,6 @@ export const router = createRouter([
       { path: "downloadable-files", loader: () => redirect("/") },
     ],
   },
-]);
+], {
+  basename: createRouter === createHashRouter ? "/" : import.meta.env.BASE_URL,
+});
