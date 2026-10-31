@@ -47,6 +47,8 @@ jobs:
           node-version: '22'
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - name: 校验部署脚本
+        run: python3 -m unittest discover -s deploy -p 'test_*.py'
       - name: 构建指定版本
         env:
           VITE_BASE_PATH: ${{ steps.version.outputs.base }}
