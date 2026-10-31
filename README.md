@@ -21,11 +21,10 @@ pnpm build
 
 `main` 保留公共基线及默认工作流，各版本分支独立开发。后续新系列同样按主、次版本号自动映射独立路径。创建分支不会立即上线，正式发布 Release 后才部署。
 
-新功能开发示例：
+`release/2.0` 和 `release/2.1` 已创建。继续开发 2.1 功能：
 
 ```bash
-git switch release/2.0
-git switch -c release/2.1
+git switch release/2.1
 # 开发完成后，将 package.json 的 version 改为 2.1.0，提交并推送。
 git push -u origin release/2.1
 ```
