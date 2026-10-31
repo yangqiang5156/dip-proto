@@ -1,0 +1,37 @@
+name: 检查待部署的 Release
+on:
+  release:
+    types: [published, released]
+  schedule:
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
+    inputs:
+      force_tag:
+        description: 可选：演练重新部署该系列最新正式版本，例如 v2.0.0
+        required: false
+        type: string
+permissions:
+  contents: read
+  actions: write
+concurrency:
+  group: dip-proto-reconcile
+  cancel-in-progress: false
+jobs:
+  reconcile:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --test scripts/test-reconcile.mjs
+      - name: 检查并调度尚未上线的正式版本
+        env:
+          GH_TOKEN: ${{ github.token }}
+          FORCE_TAG: ${{ inputs.force_tag }}
+        run: node scripts/reconcile-releases.mjs
