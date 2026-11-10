@@ -1,3 +1,4 @@
+import { DATA_CLASSIFICATION_PATH } from '../navigation';
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { ArrowLeft, ArrowRight, CheckCircle2, Database, Loader2, Plus, ShieldCheck, Table2, Trash2 } from 'lucide-react';
@@ -101,8 +102,8 @@ export default function NewDataClassificationDowngrade() {
   };
 
   return (
-    <div className="mx-auto max-w-7xl p-6">
-      <Button variant="ghost" size="sm" className="mb-4 -ml-2" onClick={() => navigate('/data-classification-downgrade-demo')}>
+    <div className="w-full min-w-0 p-4 xl:p-6">
+      <Button variant="ghost" size="sm" className="mb-4 -ml-2" onClick={() => navigate(DATA_CLASSIFICATION_PATH)}>
         <ArrowLeft className="mr-2 h-4 w-4" />返回降级申请列表
       </Button>
       <div className="mb-6">
@@ -150,7 +151,7 @@ export default function NewDataClassificationDowngrade() {
                 </Button>
               </div>
 
-              <div className="hidden grid-cols-[minmax(150px,1fr)_120px_120px_minmax(220px,1.5fr)_36px] gap-3 px-3 text-xs font-medium text-muted-foreground lg:grid">
+              <div className="downgrade-field-heading gap-3 px-3 text-xs font-medium text-muted-foreground">
                 <span><span className="text-destructive">*</span> 要降级的表字段</span>
                 <span><span className="text-destructive">*</span> 降级前分级</span>
                 <span><span className="text-destructive">*</span> 降级后分级</span>
@@ -159,9 +160,9 @@ export default function NewDataClassificationDowngrade() {
               </div>
 
               {rows.map((row, index) => (
-                <div key={row.id} className="grid grid-cols-1 gap-3 rounded-lg border bg-muted/20 p-3 lg:grid-cols-[minmax(150px,1fr)_120px_120px_minmax(220px,1.5fr)_36px]">
+                <div key={row.id} className="downgrade-field-row grid gap-3 rounded-lg border bg-muted/20 p-3">
                   <div>
-                    <Label className="mb-1.5 block text-xs lg:hidden">要降级的表字段</Label>
+                    <Label className="downgrade-field-label mb-1.5 text-xs">要降级的表字段</Label>
                     <Input
                       aria-label={`第${index + 1}行要降级的表字段`}
                       value={row.field}
@@ -170,21 +171,21 @@ export default function NewDataClassificationDowngrade() {
                     />
                   </div>
                   <div>
-                    <Label className="mb-1.5 block text-xs lg:hidden">降级前分级</Label>
+                    <Label className="downgrade-field-label mb-1.5 text-xs">降级前分级</Label>
                     <Select value={row.originalLevel} onValueChange={(value) => updateRow(row.id, { originalLevel: value })}>
                       <SelectTrigger aria-label={`第${index + 1}行降级前分级`}><SelectValue /></SelectTrigger>
                       <SelectContent>{classificationLevels.map((level) => <SelectItem key={level} value={level}>{level}</SelectItem>)}</SelectContent>
                     </Select>
                   </div>
                   <div>
-                    <Label className="mb-1.5 block text-xs lg:hidden">降级后分级</Label>
+                    <Label className="downgrade-field-label mb-1.5 text-xs">降级后分级</Label>
                     <Select value={row.targetLevel} onValueChange={(value) => updateRow(row.id, { targetLevel: value })}>
                       <SelectTrigger aria-label={`第${index + 1}行降级后分级`}><SelectValue /></SelectTrigger>
                       <SelectContent>{classificationLevels.map((level) => <SelectItem key={level} value={level}>{level}</SelectItem>)}</SelectContent>
                     </Select>
                   </div>
                   <div>
-                    <Label className="mb-1.5 block text-xs lg:hidden">降级原因</Label>
+                    <Label className="downgrade-field-label mb-1.5 text-xs">降级原因</Label>
                     <Input
                       aria-label={`第${index + 1}行降级原因`}
                       value={row.reason}
@@ -221,7 +222,7 @@ export default function NewDataClassificationDowngrade() {
         <Card>
           <CardHeader className="pb-3"><CardTitle>审批流程</CardTitle></CardHeader>
           <CardContent>
-            <div className="flex items-center gap-3" data-testid="approval-flow">
+            <div className="approval-flow flex items-center gap-3" data-testid="approval-flow">
               <FlowNode icon={CheckCircle2} title="申请人" active />
               <FlowArrow />
               <FlowNode icon={Table2} title="技术负责人" assignee="陈晨" />
@@ -258,10 +259,10 @@ function FlowNode({
 }) {
   return (
     <div
-      className={`flex h-14 flex-1 items-center justify-center gap-2 rounded-lg border px-4 py-3 ${active ? 'border-primary/30 bg-primary-light' : 'bg-card'}`}
+      className={`flex min-h-14 min-w-0 flex-1 items-center justify-center gap-2 rounded-lg border px-4 py-3 ${active ? 'border-primary/30 bg-primary-light' : 'bg-card'}`}
       data-testid="approval-flow-node"
     >
-      <div className={`flex h-7 w-7 items-center justify-center rounded-full ${active ? 'bg-primary text-white' : 'bg-muted text-muted-foreground'}`}>
+      <div className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full ${active ? 'bg-primary text-white' : 'bg-muted text-muted-foreground'}`}>
         <Icon className="h-4 w-4" />
       </div>
       <div>

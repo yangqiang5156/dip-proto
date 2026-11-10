@@ -251,12 +251,12 @@ export default function ApprovalDecision() {
   };
 
   return (
-    <div className="mx-auto max-w-7xl p-6">
+    <div className="w-full min-w-0 p-4 xl:p-6">
       <Button variant="ghost" size="sm" className="mb-4 -ml-2" onClick={() => navigate('/approval-center/my-approvals')}>
         <ArrowLeft className="mr-2 h-4 w-4" />返回我的审批
       </Button>
       <div className="mb-6">
-        <div className="mb-2 flex items-center gap-3">
+        <div className="mb-2 flex flex-wrap items-center gap-3">
           <h1 className="text-2xl">
             {request.requestType === '数据下载' ? '审批详情' : request.requestName}
           </h1>
@@ -270,8 +270,8 @@ export default function ApprovalDecision() {
 
       {decisionState === 'success' && <Alert className="mb-6 border-success/50 bg-success-light"><CheckCircle2 className="h-4 w-4 text-success" /><AlertDescription className="text-success">审批已提交，正在返回审批列表...</AlertDescription></Alert>}
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        <div className="space-y-6 lg:col-span-2">
+      <div className="detail-layout grid min-w-0 grid-cols-1 gap-6">
+        <div className="min-w-0 space-y-6">
           {request.requestType === '数据下载' && <Card>
             <CardHeader><CardTitle>申请信息</CardTitle></CardHeader>
             <CardContent className="grid grid-cols-2 gap-x-8 gap-y-4">

@@ -1,0 +1,54 @@
+/* 以内容区宽度为准，避免侧栏挤占空间后仍按浏览器宽度强制分列。 */
+.platform-content {
+  container: page / inline-size;
+}
+
+.detail-layout > *,
+.downgrade-field-row > * {
+  min-width: 0;
+}
+
+.downgrade-field-heading {
+  display: none;
+}
+
+.downgrade-field-row {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.downgrade-field-label {
+  display: block;
+}
+
+@container page (min-width: 900px) {
+  .downgrade-field-heading,
+  .downgrade-field-row {
+    grid-template-columns: minmax(150px, 1fr) minmax(100px, 0.5fr) minmax(100px, 0.5fr) minmax(220px, 1.5fr) 36px;
+  }
+
+  .downgrade-field-heading {
+    display: grid;
+  }
+
+  .downgrade-field-label {
+    display: none;
+  }
+}
+
+@container page (min-width: 1100px) {
+  .detail-layout {
+    grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+  }
+}
+
+@container page (max-width: 620px) {
+  .approval-flow {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .approval-flow > svg {
+    align-self: center;
+    transform: rotate(90deg);
+  }
+}

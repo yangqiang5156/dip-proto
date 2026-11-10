@@ -19,7 +19,7 @@ export function FilterBar({
 }: FilterBarProps) {
   return (
     <div className="bg-white rounded-lg border border-border p-4 mb-4">
-      <div className="grid grid-cols-4 gap-4 items-end">
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,220px),1fr))] items-end gap-4">
         {children}
       </div>
 
@@ -51,7 +51,7 @@ interface FilterItemProps {
 
 export function FilterItem({ label, children, required }: FilterItemProps) {
   return (
-    <div className="space-y-1.5">
+    <div className="min-w-0 space-y-1.5">
       <label className="text-sm font-medium text-text-primary">
         {required && <span className="text-destructive mr-0.5">*</span>}
         {label}

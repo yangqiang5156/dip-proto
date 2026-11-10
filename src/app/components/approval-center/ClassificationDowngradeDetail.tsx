@@ -45,14 +45,14 @@ export function ClassificationDowngradeDetail({ downgrade }: ClassificationDowng
           <DetailItem icon={ShieldCheck} label="技术负责人" value={downgrade.technicalOwner} />
         </div>
 
-        <div className="overflow-hidden rounded-lg border">
-          <div className="grid grid-cols-[minmax(140px,1fr)_180px_minmax(220px,1.5fr)] gap-4 bg-muted/50 px-4 py-2.5 text-xs font-medium text-muted-foreground">
+        <div className="overflow-x-auto rounded-lg border">
+          <div className="grid min-w-[600px] grid-cols-[minmax(140px,1fr)_180px_minmax(220px,1.5fr)] gap-4 bg-muted/50 px-4 py-2.5 text-xs font-medium text-muted-foreground">
             <span>降级字段</span>
             <span>分级调整</span>
             <span>降级原因</span>
           </div>
           {items.map((item, index) => (
-            <div key={`${item.field}-${index}`} className="grid grid-cols-[minmax(140px,1fr)_180px_minmax(220px,1.5fr)] gap-4 border-t px-4 py-3 text-sm">
+            <div key={`${item.field}-${index}`} className="grid min-w-[600px] grid-cols-[minmax(140px,1fr)_180px_minmax(220px,1.5fr)] gap-4 border-t px-4 py-3 text-sm">
               <span className="font-mono font-medium">{item.field}</span>
               <span className="flex items-center gap-2">
                 <LevelBadge level={item.originalLevel} strong />
@@ -75,7 +75,7 @@ function DetailItem({ icon: Icon, label, value }: { icon: typeof Database; label
         <Icon className="h-4 w-4" />
         {label}
       </p>
-      <p className="text-sm font-medium text-foreground">{value}</p>
+      <p className="break-words text-sm font-medium text-foreground">{value}</p>
     </div>
   );
 }

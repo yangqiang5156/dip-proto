@@ -358,12 +358,12 @@ export default function ApprovalDetail() {
   };
 
   return (
-    <div className="mx-auto max-w-7xl p-6">
+    <div className="w-full min-w-0 p-4 xl:p-6">
       <Button variant="ghost" size="sm" className="mb-4 -ml-2" onClick={() => navigate('/approval-center/my-applications')}>
         <ArrowLeft className="mr-2 h-4 w-4" />返回我的申请
       </Button>
       <div className="mb-6">
-        <div className="mb-2 flex items-center gap-3">
+        <div className="mb-2 flex flex-wrap items-center gap-3">
           <h1 className="text-2xl">
             {application.requestType === '数据下载' ? '申请详情' : application.requestName}
           </h1>
@@ -380,8 +380,8 @@ export default function ApprovalDetail() {
         </Alert>
       )}
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        <div className="space-y-6 lg:col-span-2">
+      <div className="detail-layout grid min-w-0 grid-cols-1 gap-6">
+        <div className="min-w-0 space-y-6">
           {application.requestType === '数据下载' && <Card>
             <CardHeader><CardTitle>申请信息</CardTitle></CardHeader>
             <CardContent className="grid grid-cols-2 gap-x-8 gap-y-4 text-sm">

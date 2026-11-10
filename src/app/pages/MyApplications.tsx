@@ -165,7 +165,7 @@ export default function MyApplications() {
 
   return (
     <div className="h-full flex flex-col">
-      <div className="flex-1 p-6 overflow-auto">
+      <div className="min-w-0 flex-1 overflow-auto p-4 xl:p-6">
         <div className="mb-5">
           <div>
             <h1 className="text-xl font-semibold text-text-primary">我的申请</h1>
@@ -284,7 +284,7 @@ export default function MyApplications() {
                 </TableBody>
               </Table>
             </div>
-            <div className="mt-4 flex items-center justify-between">
+            <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
               <span className="text-sm text-text-secondary">共 {filteredApplications.length} 条申请</span>
               <div className="flex items-center gap-2">
                 <Button variant="outline" size="sm" disabled>上一页</Button>

@@ -120,7 +120,7 @@ export default function AuditLogs() {
 
   return (
     <div className="h-full flex flex-col">
-      <div className="flex-1 p-6 overflow-auto">
+      <div className="min-w-0 flex-1 overflow-auto p-4 xl:p-6">
         <div className="mb-5">
           <h1 className="text-xl font-semibold text-text-primary">审计日志</h1>
           <p className="mt-1 text-sm text-text-secondary">统一查看下载日志和配置变更日志</p>
@@ -225,7 +225,7 @@ export default function AuditLogs() {
                 </TableBody>
               </Table>
             </div>
-            <div className="mt-4 flex items-center justify-between">
+            <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
               <span className="text-sm text-text-secondary">共 {filteredLogs.length} 条记录</span>
               <div className="flex items-center gap-2">
                 <Button variant="outline" size="sm" disabled>上一页</Button>

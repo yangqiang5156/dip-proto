@@ -98,7 +98,7 @@ function NotificationCard({
           ))}
         </div>
 
-        <div className="mt-4 flex items-center justify-between gap-3 border-t pt-4">
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 gap-3 border-t pt-4">
           <span className="text-xs text-text-tertiary">飞书消息卡片 · 状态实时同步</span>
           <Button variant="outline" size="sm" onClick={onAction}>
             {actionLabel}
@@ -377,7 +377,7 @@ export default function FeishuCardDemo() {
 
   return (
     <div className="flex h-full flex-col">
-      <div className="flex-1 overflow-auto p-6">
+      <div className="min-w-0 flex-1 overflow-auto p-4 xl:p-6">
         <div className="mb-5">
           <h1 className="text-xl font-semibold text-text-primary">飞书卡片Demo</h1>
           <p className="mt-1 text-sm text-text-secondary">展示申请、审批、文件交付全流程通知，以及可在飞书内完成的审批操作</p>

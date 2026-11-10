@@ -119,14 +119,14 @@ export default function ExportCenter() {
   };
 
   return (
-    <div className="p-6">
+    <div className="w-full min-w-0 p-4 xl:p-6">
       <div className="mb-6">
         <h1 className="text-2xl font-semibold text-gray-900 mb-2">导出中心</h1>
         <p className="text-sm text-gray-500">统一管理所有数据导出任务，审批通过后可下载</p>
       </div>
 
       {/* 统计卡片 */}
-      <div className="grid grid-cols-4 gap-4 mb-6">
+      <div className="mb-6 grid grid-cols-[repeat(auto-fit,minmax(min(100%,200px),1fr))] gap-4">
         <div className="bg-white rounded-lg shadow-sm p-4">
           <div className="flex items-center justify-between">
             <div>

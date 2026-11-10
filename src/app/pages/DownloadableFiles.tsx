@@ -224,7 +224,7 @@ export default function DownloadableFiles() {
 
   return (
     <div className="h-full flex flex-col">
-      <div className="flex-1 p-6 overflow-auto">
+      <div className="min-w-0 flex-1 overflow-auto p-4 xl:p-6">
         <div className="mb-5">
           <h1 className="text-xl font-semibold text-text-primary">可下载文件</h1>
           <p className="mt-1 text-sm text-text-secondary">查看和下载已审批通过的导出文件</p>

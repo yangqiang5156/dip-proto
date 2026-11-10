@@ -1,3 +1,4 @@
+import { DATA_CLASSIFICATION_PATH } from '../navigation';
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { Eye, Plus, ShieldCheck } from 'lucide-react';
@@ -92,13 +93,13 @@ export default function DataClassificationDowngradeDemo() {
   };
 
   return (
-    <div className="p-6">
-      <div className="mb-5 flex items-start justify-between gap-4">
+    <div className="w-full min-w-0 p-4 xl:p-6">
+      <div className="mb-5 flex flex-wrap items-start justify-between gap-4">
         <div>
           <h1 className="text-xl font-semibold text-text-primary">数据分级降级申请</h1>
           <p className="mt-1 text-sm text-text-secondary">查看和发起数据表字段分级降级申请</p>
         </div>
-        <Button onClick={() => navigate('/data-classification-downgrade-demo/new')}>
+        <Button onClick={() => navigate(`${DATA_CLASSIFICATION_PATH}/new`)}>
           <Plus className="mr-2 h-4 w-4" />新建降级申请
         </Button>
       </div>
@@ -186,7 +187,7 @@ export default function DataClassificationDowngradeDemo() {
         </Table>
       </div>
 
-      <div className="mt-4 flex items-center justify-between">
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
         <span className="text-sm text-muted-foreground">共 {filteredRecords.length} 条记录</span>
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" disabled>上一页</Button>

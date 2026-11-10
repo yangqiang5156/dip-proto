@@ -206,8 +206,8 @@ export default function EntryConfiguration() {
 
   return (
     <div className="h-full flex flex-col">
-      <div className="flex-1 p-6 overflow-auto">
-        <div className="mb-5 flex items-start justify-between gap-4">
+      <div className="min-w-0 flex-1 overflow-auto p-4 xl:p-6">
+        <div className="mb-5 flex flex-wrap items-start justify-between gap-4">
           <div>
             <h1 className="text-xl font-semibold text-text-primary">入口配置</h1>
             <p className="mt-1 text-sm text-text-secondary">维护数据下载入口及审批启用状态</p>
@@ -358,7 +358,7 @@ export default function EntryConfiguration() {
             </div>
 
             {/* Pagination */}
-            <div className="mt-4 flex items-center justify-between">
+            <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
               <span className="text-sm text-text-secondary">
                 共 {configs.length} 个入口配置
               </span>

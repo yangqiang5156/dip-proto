@@ -9,7 +9,7 @@ interface PageHeaderProps {
 
 export function PageHeader({ title, description, actions, breadcrumbs }: PageHeaderProps) {
   return (
-    <div className="bg-white border-b border-border px-6 py-4">
+    <div className="bg-white border-b border-border px-4 py-4 xl:px-6">
       {breadcrumbs && breadcrumbs.length > 0 && (
         <div className="flex items-center gap-2 text-sm text-text-secondary mb-2">
           {breadcrumbs.map((crumb, index) => (
@@ -29,7 +29,7 @@ export function PageHeader({ title, description, actions, breadcrumbs }: PageHea
         </div>
       )}
 
-      <div className="flex items-start justify-between gap-4">
+      <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="flex-1 min-w-0">
           <h1 className="text-xl font-semibold text-text-primary">{title}</h1>
           {description && (
@@ -38,7 +38,7 @@ export function PageHeader({ title, description, actions, breadcrumbs }: PageHea
         </div>
 
         {actions && (
-          <div className="flex items-center gap-2 flex-shrink-0">
+          <div className="flex flex-wrap items-center gap-2">
             {actions}
           </div>
         )}
