@@ -267,7 +267,7 @@ export default function MyApplications() {
                               variant="ghost"
                               size="sm"
                               className="text-success hover:bg-success/10 hover:text-success"
-                              onClick={() => navigate(`/?requestId=${encodeURIComponent(application.requestId)}`)}
+                              onClick={() => navigate(`/downloadable-files?requestId=${encodeURIComponent(application.requestId)}`)}
                             >
                               <Download className="mr-1 h-4 w-4" />去下载
                             </Button>

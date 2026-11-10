@@ -12,7 +12,8 @@ function readVisits(): Visit[] {
     const value: unknown = JSON.parse(window.localStorage.getItem(storageKey) || '[]');
     if (!Array.isArray(value)) return [];
     const seen = new Set<string>();
-    return value.filter((item): item is Visit => {
+    return value.map((item) => item && typeof item === 'object' && item.path === '/'
+      ? { ...item, path: '/downloadable-files' } : item).filter((item): item is Visit => {
       if (!item || typeof item !== 'object' || !catalog.has(item.path) || item.path === '/workbench'
         || !Number.isFinite(item.visitedAt) || item.visitedAt <= 0 || seen.has(item.path)) return false;
       seen.add(item.path);

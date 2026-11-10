@@ -55,7 +55,7 @@ export default function Layout() {
               {expandedMenu === "system" && (
                 <div className="mt-1 space-y-1">
                   <NavLink
-                    to="/"
+                    to="/downloadable-files"
                     className={({ isActive }) =>
                       `block px-6 py-2 text-sm ${
                         isActive

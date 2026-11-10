@@ -29,7 +29,11 @@ export const router = createRouter([
     path: "/",
     Component: EnterpriseLayout,
     children: [
-      { index: true, Component: DownloadableFiles },
+      { index: true, loader: ({ request }) => {
+        const url = new URL(request.url);
+        // 兼容旧版通过根地址定位下载文件的链接。
+        return redirect(`${url.searchParams.has('requestId') ? '/downloadable-files' : '/workbench'}${url.search}`);
+      } },
       { path: "workbench", Component: Workbench },
       { path: "favorites", Component: MyFavorites },
       { path: "system-management/permissions/applications/new", Component: MenuPermissionApplication },
@@ -66,7 +70,7 @@ export const router = createRouter([
       { path: "pending-approval", loader: () => redirect("/approval-center/my-approvals") },
       { path: "approved", loader: () => redirect("/approval-center/my-approvals") },
       { path: "all-records", loader: () => redirect("/approval-center/all-records") },
-      { path: "downloadable-files", loader: () => redirect("/") },
+      { path: "downloadable-files", Component: DownloadableFiles },
     ],
   },
 ], {

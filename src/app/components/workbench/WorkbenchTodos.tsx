@@ -13,11 +13,12 @@ export function WorkbenchTodos({ records = approvalRecords }: { records?: Approv
       </header>
       {pending.length > 0 ? <>
         <div className="wb-todos-grid">{pending.map((item) => <article className="wb-todo-card" key={item.id}>
-          <div className="wb-todo-top"><RequestTypeBadge type={item.requestType} /><span className="wb-todo-status"><i aria-hidden="true" />待审批</span></div>
-          <h3 title={item.entryName}>{item.entryName}</h3>
-          <p className="wb-todo-id">{item.requestId}</p>
-          <dl><div><dt>申请人</dt><dd>{item.applicant}<span> · {item.department}</span></dd></div><div><dt>当前节点</dt><dd>{item.currentNode}</dd></div><div><dt>更新时间</dt><dd><time dateTime={item.updatedAt.replace(' ', 'T') + '+08:00'}>{item.updatedAt.slice(0, 16)}</time></dd></div></dl>
-          <div className="wb-todo-footer"><span>{item.module}{item.classificationLevel && ` · ${item.classificationLevel}`}</span><Link to={`/approval-center/approval/${item.id}`} aria-label={`去处理 ${item.entryName}`}>去处理<ArrowRight size={14} aria-hidden="true" /></Link></div>
+          <div className="wb-todo-main">
+            <div className="wb-todo-heading"><span className="wb-todo-type"><RequestTypeBadge type={item.requestType} /></span><h3 title={item.entryName}>{item.entryName}</h3></div>
+            <div className="wb-todo-reference"><span className="wb-todo-id">{item.requestId}</span><span>{item.module}{item.classificationLevel && ` · ${item.classificationLevel}`}</span></div>
+            <dl><div><dt>申请人</dt><dd>{item.applicant}<span> · {item.department}</span></dd></div><div><dt>当前节点</dt><dd>{item.currentNode}</dd></div><div><dt>更新时间</dt><dd><time dateTime={item.updatedAt.replace(' ', 'T') + '+08:00'}>{item.updatedAt.slice(0, 16)}</time></dd></div></dl>
+          </div>
+          <div className="wb-todo-actions"><span className="wb-todo-status"><i aria-hidden="true" />待审批</span><Link to={`/approval-center/approval/${item.id}`} aria-label={`去处理 ${item.entryName}`}>去处理<ArrowRight size={14} aria-hidden="true" /></Link></div>
         </article>)}</div>
       </> : <div className="wb-todos-empty">
         <div className="wb-todos-empty-hero"><span className="wb-todos-done-icon"><CheckCheck size={32} aria-hidden="true" /></span><h3>当前没有待处理的审批</h3><p>待我处理的申请会在这里集中展示。现在可以回顾审批记录，或继续处理自己的申请。</p><Link to="/approval-center/my-approvals" className="wb-todos-primary">查看我的审批<ArrowRight size={15} aria-hidden="true" /></Link></div>

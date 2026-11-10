@@ -118,7 +118,7 @@ export function PlatformHeader() {
           </Tooltip>
           <Tooltip>
             <TooltipTrigger asChild>
-              <NavLink to="/" aria-label="进入下载中心" className={`${iconClass} ${isDownloadCenter ? 'bg-white !text-[#3069e6]' : ''}`}>
+              <NavLink to="/downloadable-files" aria-label="进入下载中心" className={`${iconClass} ${isDownloadCenter ? 'bg-white !text-[#3069e6]' : ''}`}>
                 <Download className="h-5 w-5" aria-hidden="true" />
               </NavLink>
             </TooltipTrigger>

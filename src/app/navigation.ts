@@ -249,7 +249,7 @@ export const menuGroups: MenuGroup[] = [
     label: '下载中心',
     icon: Download,
     items: [
-      { label: '可下载文件', path: '/' },
+      { label: '可下载文件', path: '/downloadable-files' },
       { label: '入口配置', path: '/approval-config' },
       { label: '审计日志', path: '/audit-logs' },
     ],
@@ -446,7 +446,7 @@ export const platformCategories: Array<{ id: string; label: string; modules: Pla
     label: '平台管理',
     modules: [
       { id: 'approval', label: '审批中心', icon: ClipboardCheck, topMenus: [{ label: '审批中心', path: '/approval-center/my-applications', groupIds: ['approval'] }] },
-      { id: 'download', label: '下载中心', icon: Download, topMenus: [{ label: '下载中心', path: '/', groupIds: ['download', 'demo'] }] },
+      { id: 'download', label: '下载中心', icon: Download, topMenus: [{ label: '下载中心', path: '/downloadable-files', groupIds: ['download', 'demo'] }] },
       {
         id: 'system-management', label: '系统管理', icon: Settings2, routePrefix: '/system-management', blankPages: true,
         topMenus: [

@@ -4,6 +4,7 @@ import { menuCatalog } from '../navigation';
 const storageKey = 'dip-proto.menu-favorites';
 const catalogByPath = new Map(menuCatalog.map((item) => [item.path, item]));
 const legacyPaths: Record<string, string> = {
+  '/': '/downloadable-files',
   '/data-operations': '/data-operations/home',
   '/intelligent-analysis': '/intelligent-analysis/events',
   '/user-behavior': '/user-behavior/tracking/events',

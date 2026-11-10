@@ -191,22 +191,24 @@
 .wb-todos-header h2 { display: flex; align-items: center; gap: 9px; }
 .wb-todos-header p { margin: 6px 0 0; color: var(--wb-muted); font-size: 12px; }
 .wb-todos-count { min-width: 24px; padding: 2px 7px; border-radius: 6px; color: #3069e6; background: #eef5ff; font-size: 12px; text-align: center; }
-.wb-todos-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; padding: 20px; }
-.wb-todo-card { min-width: 0; border: 1px solid #e2e9f3; border-radius: 8px; padding: 16px; background: #fff; }
-.wb-todo-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
-.wb-todo-status { display: inline-flex; align-items: center; gap: 5px; color: #b77913; font-size: 12px; white-space: nowrap; }
-.wb-todo-status i { width: 5px; height: 5px; border-radius: 50%; background: #e6a23c; }
-.wb-todo-card h3 { margin: 14px 0 6px; font-size: 15px; font-weight: 600; line-height: 1.65; overflow-wrap: anywhere; }
-.wb-todo-id { margin: 0; font-size: 11px; color: #8a96aa; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
-.wb-todo-card dl { margin: 16px 0; display: grid; gap: 9px; font-size: 12px; }
-.wb-todo-card dl>div { display: grid; grid-template-columns: 62px minmax(0,1fr); gap: 8px; }
-.wb-todo-card dt { color: #8a96aa; }
+.wb-todos-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; padding: 16px 20px; }
+.wb-todo-card { min-width: 0; display: grid; grid-template-columns: minmax(0,1fr) auto; align-items: center; gap: 16px; border: 1px solid #e2e9f3; border-radius: 8px; padding: 13px 16px; background: #fff; }
+.wb-todo-main { min-width: 0; }
+.wb-todo-heading { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.wb-todo-type { flex-shrink: 0; }
+.wb-todo-card h3 { min-width: 0; margin: 0; font-size: 14px; font-weight: 600; line-height: 24px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.wb-todo-reference { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 3px; color: #8a96aa; font-size: 11px; line-height: 18px; }
+.wb-todo-id { font-size: 11px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+.wb-todo-card dl { display: flex; flex-wrap: wrap; gap: 5px 20px; margin: 8px 0 0; font-size: 12px; line-height: 18px; }
+.wb-todo-card dl>div { display: flex; gap: 7px; min-width: 0; }
+.wb-todo-card dt { flex-shrink: 0; color: #8a96aa; }
 .wb-todo-card dd { margin: 0; color: #30415f; overflow-wrap: anywhere; }
 .wb-todo-card dd span { color: #7a879c; }
-.wb-todo-footer { display: flex; align-items: center; justify-content: space-between; gap: 12px; border-top: 1px solid #edf1f6; padding-top: 12px; }
-.wb-todo-footer>span { font-size: 12px; color: #8a96aa; }
-.wb-todo-footer a { display: inline-flex; gap: 6px; align-items: center; padding: 7px 12px; border-radius: 5px; background: #eef5ff; color: #3069e6; font-size: 12px; white-space: nowrap; }
-.wb-todo-footer a:hover { background: #dfeaff; }
+.wb-todo-actions { display: flex; flex-direction: column; align-items: flex-end; justify-content: center; gap: 10px; }
+.wb-todo-status { display: inline-flex; align-items: center; gap: 5px; color: #b77913; font-size: 12px; white-space: nowrap; }
+.wb-todo-status i { width: 5px; height: 5px; border-radius: 50%; background: #e6a23c; }
+.wb-todo-actions a { display: inline-flex; gap: 6px; align-items: center; padding: 6px 10px; border-radius: 5px; background: #eef5ff; color: #3069e6; font-size: 12px; white-space: nowrap; }
+.wb-todo-actions a:hover { background: #dfeaff; }
 .wb-todos-empty { padding: 28px 24px 20px; }
 .wb-todos-empty-hero { text-align: center; max-width: 500px; margin: 0 auto; }
 .wb-todos-done-icon { display: grid; place-items: center; width: 64px; height: 64px; margin: 0 auto 16px; border-radius: 20px; background: #ecf8f2; color: #27a46c; }
@@ -221,7 +223,6 @@
 .wb-todos-shortcuts strong { font-size: 13px; color: #30415f; }
 .wb-todos-shortcuts small { margin-top: 5px; font-size: 12px; color: #7a879c; }
 .wb-todos-empty-note { display: flex; justify-content: center; align-items: center; gap: 8px; margin: 0; color: #8a96aa; font-size: 12px; line-height: 1.8; }
-@media (min-width: 2100px) { .wb-todos-grid { grid-template-columns: repeat(3,minmax(0,1fr)); } }
 @media (min-width: 901px) and (max-width: 1180px), (max-width: 640px) {
   .wb-todos-grid, .wb-todos-shortcuts { grid-template-columns: minmax(0,1fr); }
 }
@@ -230,8 +231,6 @@
   .wb-todos-grid { padding: 16px; gap: 12px; }
   .wb-todos-empty { padding: 24px 16px 18px; }
 }
-.wb-todo-card { display: flex; flex-direction: column; }
-.wb-todo-footer { margin-top: auto; }
 
 .wb-search-results li>button { grid-template-columns: 36px minmax(0,1fr) auto; }
 .wb-search-results .wb-result-title { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; }
@@ -241,3 +240,14 @@
   .wb-search-results li>button { grid-template-columns: 24px minmax(0,1fr) auto; gap: 7px; padding: 10px 6px; }
   .wb-request-access { font-size: 11px; gap: 3px; }
 }
+
+@media (max-width: 640px) {
+  .wb-todo-card { padding: 12px; gap: 10px; }
+  .wb-todo-heading { flex-wrap: wrap; gap: 5px 8px; }
+  .wb-todo-card h3 { flex-basis: 100%; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; white-space: normal; overflow-wrap: anywhere; line-height: 21px; }
+  .wb-todo-card dl { gap: 4px 12px; }
+}
+
+/* 链接与按钮采用相同列表文字样式，统一最近使用和帮助与公告。 */
+.wb-side-row { font-family: inherit; }
+.wb-side-row>span { font-family: inherit; font-size: 13px; font-weight: 500; }

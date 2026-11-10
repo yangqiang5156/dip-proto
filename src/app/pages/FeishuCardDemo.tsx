@@ -158,7 +158,7 @@ const notificationCards: NotificationCardDefinition[] = [
     tone: 'primary' as CardTone,
     rows: [['申请单号', 'DL20260429002'], ['文件名称', '用户行为分析_Q1.xlsx'], ['任务状态', '队列处理中'], ['预计完成', '3–5 分钟']],
     actionLabel: '查看状态',
-    route: '/?requestId=DL20260429002',
+    route: '/downloadable-files?requestId=DL20260429002',
   },
   {
     title: '文件已生成，可下载',
@@ -167,7 +167,7 @@ const notificationCards: NotificationCardDefinition[] = [
     tone: 'success' as CardTone,
     rows: [['申请单号', 'DL20260428003'], ['文件名称', '订单明细_202604.xlsx'], ['文件大小', '1.8 MB'], ['有效期至', '2026-08-03 10:22:18']],
     actionLabel: '去下载',
-    route: '/?requestId=DL20260428003',
+    route: '/downloadable-files?requestId=DL20260428003',
   },
   {
     title: '文件生成失败',
@@ -176,7 +176,7 @@ const notificationCards: NotificationCardDefinition[] = [
     tone: 'destructive' as CardTone,
     rows: [['申请单号', 'DL20260425007'], ['文件名称', '物流数据导出_202604.xlsx'], ['失败原因', '数据源连接超时'], ['发生时间', '2026-07-27 10:25:08']],
     actionLabel: '重新生成',
-    route: '/?requestId=DL20260425007',
+    route: '/downloadable-files?requestId=DL20260425007',
   },
   {
     title: '数据表权限已生效',

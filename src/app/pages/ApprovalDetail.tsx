@@ -471,7 +471,7 @@ export default function ApprovalDetail() {
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />正在重新生成
                 </Button>
               )}
-              {application.requestType === '数据下载' && ['ready', 'downloaded'].includes(fileStatus || '') && <Button className="w-full" onClick={() => navigate(`/?requestId=${encodeURIComponent(application.id)}`)}><Download className="mr-2 h-4 w-4" />去下载中心</Button>}
+              {application.requestType === '数据下载' && ['ready', 'downloaded'].includes(fileStatus || '') && <Button className="w-full" onClick={() => navigate(`/downloadable-files?requestId=${encodeURIComponent(application.id)}`)}><Download className="mr-2 h-4 w-4" />去下载中心</Button>}
             </CardContent>
           </Card>
         </div>
