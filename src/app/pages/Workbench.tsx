@@ -109,11 +109,11 @@ export default function Workbench() {
         <section className="wb-favorites-section" aria-labelledby="wb-favorites-heading">
           <div className="wb-section-head"><h2 id="wb-favorites-heading">收藏的功能</h2><button type="button" className="wb-text-action" onClick={() => setManagerOpen(true)}>管理收藏</button></div>
           <div className="wb-favorite-grid">
-            {favorites.slice(0, 5).map((item) => {
+            {favorites.slice(0, 9).map((item) => {
               const Icon = getMenuIcon(item);
               return <article key={item.path} className="wb-favorite-card wb-favorite-tile">
                 <Link to={item.path} className="wb-favorite-card-link">
-                  <span className="wb-favorite-icon"><Icon size={30} aria-hidden="true" /></span>
+                  <span className="wb-favorite-icon"><Icon size={24} aria-hidden="true" /></span>
                   <span className="wb-favorite-title">{item.label}</span>
                   <span className="wb-favorite-desc" title={getMenuSource(item)}>{getMenuSource(item)}</span>
                 </Link>

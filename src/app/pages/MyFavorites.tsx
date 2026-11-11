@@ -22,7 +22,7 @@ export default function MyFavorites() {
     <div className="w-full min-w-0 p-4 xl:p-6">
       <div className="mb-5">
         <h1 className="text-xl font-semibold text-text-primary">我的收藏</h1>
-        <p className="mt-1 text-sm text-text-secondary">拖动卡片左上角的手柄调整顺序，前 5 个收藏会显示在工作台，排序自动保存。</p>
+        <p className="mt-1 text-sm text-text-secondary">拖动卡片左上角的手柄调整顺序，前 9 个收藏会显示在工作台，排序自动保存。</p>
       </div>
       <p role="status" className="sr-only">{announcement}</p>
       {favorites.length === 0 ? (
@@ -76,7 +76,7 @@ export default function MyFavorites() {
                     className="select-none cursor-grab rounded p-1 text-text-secondary hover:bg-muted focus-visible:outline-2 focus-visible:outline-primary active:cursor-grabbing"
                   ><GripVertical className="h-4 w-4" aria-hidden="true" /></button>
                   <span className="text-xs text-text-secondary">{index + 1}</span>
-                  {index < 5 && <span className="rounded bg-[#eef5ff] px-2 py-0.5 text-xs text-primary">工作台展示</span>}
+                  {index < 9 && <span className="rounded bg-[#eef5ff] px-2 py-0.5 text-xs text-primary">工作台展示</span>}
                   <div className="ml-auto flex gap-1">
                     <button type="button" disabled={index === 0} aria-label={`上移 ${item.label}`} title="上移" onClick={() => move(item.path, favorites[index - 1].path)} className="rounded p-1.5 text-text-secondary hover:bg-muted disabled:cursor-not-allowed disabled:opacity-30"><ArrowUp className="h-3.5 w-3.5" /></button>
                     <button type="button" disabled={index === favorites.length - 1} aria-label={`下移 ${item.label}`} title="下移" onClick={() => move(item.path, favorites[index + 1].path)} className="rounded p-1.5 text-text-secondary hover:bg-muted disabled:cursor-not-allowed disabled:opacity-30"><ArrowDown className="h-3.5 w-3.5" /></button>

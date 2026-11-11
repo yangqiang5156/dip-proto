@@ -19,7 +19,7 @@ export function FavoriteManager({ open, onOpenChange }: { open: boolean; onOpenC
       <DialogContent className="wb-dialog wb-manager-dialog">
         <DialogHeader>
           <DialogTitle>管理收藏</DialogTitle>
-          <DialogDescription>选择常用功能，在“查看全部收藏”中拖动排序，前 5 个会显示在工作台。</DialogDescription>
+          <DialogDescription>选择常用功能，在“查看全部收藏”中拖动排序，前 9 个会显示在工作台。</DialogDescription>
         </DialogHeader>
         <div className="wb-manager-filters">
           <label className="wb-manager-search"><Search size={18} aria-hidden="true" /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="搜索功能名称或菜单路径" aria-label="搜索可收藏功能" /></label>

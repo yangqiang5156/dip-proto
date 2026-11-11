@@ -5,8 +5,8 @@ import { fileURLToPath } from 'node:url';
 
 const rootDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const buildDir = path.join(rootDir, '.share-build');
-const outputFile = path.join(rootDir, 'download-center-share.html');
-const pnpmCommand = process.platform === 'win32' ? 'pnpm.cmd' : 'pnpm';
+const outputFile = path.join(rootDir, 'dip-proto-share.html');
+const viteCommand = path.join(rootDir, 'node_modules', 'vite', 'bin', 'vite.js');
 
 function resolveBuiltAsset(assetUrl) {
   return path.join(buildDir, assetUrl.replace(/^\.?\//, ''));
@@ -16,8 +16,8 @@ rmSync(buildDir, { recursive: true, force: true });
 
 try {
   execFileSync(
-    pnpmCommand,
-    ['exec', 'vite', 'build', '--outDir', buildDir, '--emptyOutDir'],
+    process.execPath,
+    [viteCommand, 'build', '--outDir', buildDir, '--emptyOutDir'],
     {
       cwd: rootDir,
       env: { ...process.env, VITE_STANDALONE: 'true' },
@@ -57,7 +57,7 @@ try {
 
   html = html.replace(
     '</head>',
-    '  <meta name="generator" content="downLoadCenter standalone share build" />\n  <!-- 单文件离线演示：脚本、样式和图片均已内嵌。 -->\n</head>',
+    '  <meta name="generator" content="dip-proto standalone share build" />\n  <!-- 单文件离线演示：脚本、样式和图片均已内嵌。 -->\n</head>',
   );
 
   html = html.replace(/[ \t]+$/gm, '');
