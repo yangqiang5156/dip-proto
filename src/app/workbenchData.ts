@@ -63,5 +63,5 @@ export const workbenchGuides = [
   { id: 'approval', title: '数据申请与审批流程', tag: '指南', paragraphs: ['在“审批中心”中查看我的申请、我的审批及全部记录；在“下载中心”中查看文件、入口配置和审计日志。', '数据分级降级申请位于“数据资产 → 资产管理 → 数据资产管理 → 数据分级降级”。'], actions: [{ label: '进入审批中心', path: '/approval-center/my-applications' }, { label: '查看可下载文件', path: '/downloadable-files' }] },
   { id: 'favorite-order', title: '收藏排序与工作台展示', tag: '说明', paragraphs: ['在工作台点击“管理收藏”，再点击“查看全部收藏”进入我的收藏页面。拖动卡片左上角的手柄即可调整排序，也可以使用上移、下移按钮。', '排序会保存在当前浏览器。工作台按收藏顺序展示前 9 项，其余功能可在我的收藏中查看。'], actions: [{ label: '管理收藏顺序', path: '/favorites' }] },
   { id: 'download-files', title: '下载文件查看说明', tag: '指南', paragraphs: ['审批通过后，可通过下载中心查看导出文件及其生成状态。文件生成完成后，使用对应的下载入口获取文件。', '下载中心还提供入口配置与审计日志，便于查看下载相关配置和操作记录。'], actions: [{ label: '打开下载中心', path: '/downloadable-files' }] },
-  { id: 'workbench-todos', title: '工作台待办使用说明', tag: '说明', paragraphs: ['工作台“我的待办”展示审批中心中待我处理的申请，可直接查看申请类型、申请人、当前节点和更新时间。', '点击卡片中的“去处理”进入对应审批详情；点击“全部审批”查看审批中心记录。没有待办时，也可以通过快捷入口查看我的申请与历史审批记录。'], actions: [{ label: '查看我的审批', path: '/approval-center/my-approvals' }] },
+  { id: 'workbench-todos', title: '工作台待办使用说明', tag: '说明', paragraphs: ['工作台“我的待办”展示审批中心中待我处理的申请，可直接查看申请类型、申请人、当前节点和更新时间。', '点击卡片中的“去处理”进入对应审批详情；点击“全部审批”查看审批中心记录。没有待办时，此区域会展示平台功能介绍。'], actions: [{ label: '查看我的审批', path: '/approval-center/my-approvals' }] },
 ];
